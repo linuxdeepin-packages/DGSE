@@ -23,23 +23,6 @@ const SELECT_PREV = 2;
 const Gettext = imports.gettext;
 let _;
 
-function getInvisibleBorderPadding(metaWindow) {
-    // We need to adjust the position of the actor because of the
-    // consequences of invisible borders -- in reality, the texture
-    // has an extra set of "padding" around it that we need to trim
-    // down.
-
-    // The outer rect paradoxically is the smaller rectangle,
-    // containing the positions of the visible frame. The input
-    // rect contains everything, including the invisible border
-    // padding.
-    let outerRect = metaWindow.get_outer_rect();
-    let inputRect = metaWindow.get_input_rect();
-
-    return [inputRect.x - outerRect.x,
-            inputRect.y - outerRect.y];
-}
-
 function primaryModifier(mask) {
     if (mask == 0)
         return 0;
@@ -172,10 +155,10 @@ SwitchThumbnailIcon.prototype = {
 
         // Add workspace windows.
         for (let ii = 0; ii < workspaceWindows.length; ii++) {
-            let texture = workspaceWindows[ii].get_compositor_private().get_texture();
+            let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
             let rect = workspaceWindows[ii].get_outer_rect();
             let windowClone = new Clutter.Clone(
-                {source: texture,
+                {source: windowTexture,
                  reactive: true,
                  x: rect.x * scaleX,
                  y: rect.y * scaleY,
@@ -207,30 +190,26 @@ SwitchThumbnailIcon.prototype = {
             clone = this.get_workspace_clone(this.window.get_workspace().index());
         } else {
             // Otherwise show application thumbnail.
-            let realWindow = this.window.get_compositor_private();
-			let metaWindow = realWindow.meta_window;
-            let texture = realWindow.get_texture ();
-			let [borderX, borderY] = getInvisibleBorderPadding(metaWindow);
-			let outerRect = metaWindow.get_outer_rect();
-			let width = outerRect.width;
-			let height = outerRect.height;
+            let mutterWindow = this.window.get_compositor_private();
+            let windowTexture = mutterWindow.get_texture ();
+            let [width, height] = windowTexture.get_size();
             let scale = Math.min(1.0, iconWidth / width, iconHeight / height);
 
             clone = new Clutter.Group({clip_to_allocation: true});
             clone.set_size(this.iconWidth, this.iconHeight);
 
             let windowClone = new Clutter.Clone (
-                { source: texture,
+                { source: windowTexture,
                   reactive: true,
-				  x: (this.iconWidth - (width * scale)) / 2 + borderX * scale,
-                  y: (this.iconHeight - (height * scale)) / 2 + borderY * scale,
+				  x: (this.iconWidth - (width * scale)) / 2,
+                  y: (this.iconHeight - (height * scale)) / 2,
                   width: width * scale,
                   height: height * scale
                 });
             clone.add_actor(windowClone);
 
             let appIconSize = 32;
-            let appIconBoxSize = 38;
+            let appIconBoxSize = 42;
             let appIcon = this.app.create_icon_texture(appIconSize);
             let appIconBox = new St.Bin( { style_class: 'thumbnail-app-icon-box'});
             appIconBox.set_position(this.iconWidth - appIconBoxSize, this.iconHeight - appIconBoxSize);
@@ -258,7 +237,7 @@ SwitchPopupWindow.prototype = {
         this.thumbnailBorder = 1;
         this.thumbnailPaddingX = 10;
         this.thumbnailPaddingY = 10;
-        this.thumbnailFontSize = 25;
+        this.thumbnailFontSize = 15;
         this.windowPaddingX = 10;
         this.windowPaddingUp = 10;
         this.windowPaddingBottom = 20;
@@ -397,7 +376,7 @@ SwitchPopupWindow.prototype = {
         for (let jj = 0; jj < keys.length; jj++) {
             workspaces.push(otherWorkspaces[keys[jj]]);
         }
-		
+
         return [workspaceIcons, workspaces];
     },
 
@@ -657,9 +636,9 @@ function doAltTab(shellwm, binding, mask, window, backwards) {
 
 function enable() {
     Main.wm.setKeybindingHandler('switch_windows', doAltTab);
-    // Main.wm.setKeybindingHandler('switch_group', doAltTab);
+    Main.wm.setKeybindingHandler('switch_group', doAltTab);
     Main.wm.setKeybindingHandler('switch_windows_backward', doAltTab);
-    // Main.wm.setKeybindingHandler('switch_group_backward', doAltTab);
+    Main.wm.setKeybindingHandler('switch_group_backward', doAltTab);
 }
 
 function disable() {

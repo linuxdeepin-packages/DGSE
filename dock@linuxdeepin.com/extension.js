@@ -94,7 +94,7 @@ ShowDesktopIcon.prototype = {
     },
 
     _hoverChanged: function(actor) {
-        // this.popupTooltipMenu();
+        this.popupTooltipMenu();
 
         return false;
     },
@@ -425,14 +425,14 @@ DockIcon.prototype = {
             }
         // Show application name if application haven't windows.
         } else {
-            // if (appNameTooltip) {
-            //     appNameTooltip.close();
-			// 	appNameTooltip = null;
-            // }
+            if (appNameTooltip) {
+                appNameTooltip.close();
+				appNameTooltip = null;
+            }
 			
-            // if (!this.hasTooltipMenu) {
-            //     appNameTooltip = new AppNameTooltip(this);
-            // }
+            if (!this.hasTooltipMenu) {
+                appNameTooltip = new AppNameTooltip(this);
+            }
         }
     },
 
