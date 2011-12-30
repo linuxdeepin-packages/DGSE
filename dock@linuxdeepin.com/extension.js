@@ -72,7 +72,8 @@ ShowDesktopIcon.prototype = {
         this.actor.set_size(dockFrameWidth, dockFrameHeight);
         this._icon = new St.Icon({icon_name: "desktop", icon_size: dockIconSize, icon_type: St.IconType.FULLCOLOR});
         this.actor.add_actor(this._icon);
-        this.actor.connect('notify::hover', Lang.bind(this, this._hoverChanged));
+        // this.actor.connect('notify::hover', Lang.bind(this, this._hoverChanged));
+        this.actor.connect('enter-event', Lang.bind(this, this._hoverChanged));
 
         this.actor.connect("clicked", Lang.bind(this, this._toggleShowDesktop));
 
@@ -368,8 +369,10 @@ DockIcon.prototype = {
         this.hasHoverMenu = false;
         this.hasTooltipMenu = false;
         this.popupRightMenu = false;
+		
+		this.clickFalg = false;
     },
-
+	
     enableHoverMenu: function() {
         this.hasHoverMenu = true;
     },
@@ -401,7 +404,9 @@ DockIcon.prototype = {
     },
 
     _hoverChanged: function(actor) {
-        this.popupThumbnailMenu();
+		if (!this.clickFalg) {
+			this.popupThumbnailMenu();
+		}
 
         return false;
     },
@@ -895,6 +900,11 @@ AppThumbnailHoverMenu.prototype = {
         this.actor.style_class = 'dock-thumbnail-window';
 
         this.openMenu();
+		
+		if (appNameTooltip) {
+			appNameTooltip.close();
+			appNameTooltip = null;
+		}
     },
 
     open: function(animate) {
