@@ -12,10 +12,10 @@ msgid "Quit Application"
 msgstr "結束應用程序"
 
 msgid "Remove from Favorites"
-msgstr "從收藏夾移除"
+msgstr "從任務欄移除"
 
 msgid "Add to Favorites"
-msgstr "添加到收藏夾"
+msgstr "添加到任務欄"
 
 msgid "Show Desktop"
 msgstr "顯示桌面"
