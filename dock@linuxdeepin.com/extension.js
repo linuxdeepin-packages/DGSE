@@ -98,11 +98,12 @@ ShowDesktopIcon.prototype = {
     },
 
     popupTooltipMenu: function() {
+        if (appNameTooltip) {
+            appNameTooltip.close();
+			appNameTooltip = null;
+        }
+		
         if (!this.hasTooltipMenu) {
-            if (appNameTooltip) {
-                appNameTooltip.close();
-            }
-
             appNameTooltip = new ShowDesktopTooltip(this);
         }
     },
@@ -364,7 +365,7 @@ DockIcon.prototype = {
 
         this.hasHoverMenu = false;
         this.hasTooltipMenu = false;
-		this.popupRightMenu = false;
+        this.popupRightMenu = false;
     },
 
     enableHoverMenu: function() {
@@ -398,7 +399,7 @@ DockIcon.prototype = {
     },
 
     _hoverChanged: function(actor) {
-		this.popupThumbnailMenu();
+        this.popupThumbnailMenu();
 
         return false;
     },
@@ -406,21 +407,23 @@ DockIcon.prototype = {
     popupThumbnailMenu: function() {
         // If application's windows more than one.
         if (this.app.get_windows().length >= 1) {
+            if (dockThumbnailMenu) {
+                dockThumbnailMenu.close();
+				dockThumbnailMenu = null;
+            }
+			
             // If hover menu haven't popup.
             if (!this.hasHoverMenu) {
-                if (dockThumbnailMenu) {
-                    dockThumbnailMenu.close();
-                }
-
                 dockThumbnailMenu = new AppThumbnailHoverMenu(this);
             }
         // Show application name if application haven't windows.
         } else {
+            if (appNameTooltip) {
+                appNameTooltip.close();
+				appNameTooltip = null;
+            }
+			
             if (!this.hasTooltipMenu) {
-                if (appNameTooltip) {
-                    appNameTooltip.close();
-                }
-
                 appNameTooltip = new AppNameTooltip(this);
             }
         }
@@ -468,7 +471,7 @@ DockIcon.prototype = {
             this.emit('launching');
             this.app.open_new_window(-1);
         }
-		
+
         return false;
     },
 
@@ -783,7 +786,7 @@ AppNameTooltip.prototype = {
         this.dockIcon.actor.reactive = true;
         this.dockIcon.actor.connect('enter-event', Lang.bind(this, this.openMenu));
         this.dockIcon.actor.connect('leave-event', Lang.bind(this, this.requestCloseMenu));
-		this.actor.style_class = 'dock-tooltip-window';
+        this.actor.style_class = 'dock-tooltip-window';
 
         this.openMenu();
     },
@@ -835,10 +838,9 @@ AppNameTooltipItem.prototype = {
         params = Params.parse(params, { hover: false });
         PopupMenu.PopupBaseMenuItem.prototype._init.call(this, params);
 
-		let appName = dockIcon.app.get_name().trim();
-		global.log([appName, appName.length]);
-        this.text = new St.Label({ style_class: 'dock-appname-tooltip', 
-								   text: appName });
+        let appName = dockIcon.app.get_name().trim();
+        this.text = new St.Label({ style_class: 'dock-appname-tooltip',
+                                   text: appName });
         this.addActor(this.text);
 
         this.actor.add_style_class_name('dock-appname-tooltip-item');
@@ -868,7 +870,7 @@ AppThumbnailHoverMenu.prototype = {
 
         this.actor.connect('enter-event', Lang.bind(this, this.stayOnMenu));
         this.actor.connect('leave-event', Lang.bind(this, this.requestCloseMenu));
-		this.actor.style_class = 'dock-thumbnail-window';
+        this.actor.style_class = 'dock-thumbnail-window';
 
         this.openMenu();
     },
@@ -974,8 +976,8 @@ PopupMenuAppSwitcherItem.prototype = {
         if (windows.length == 0) {
             if (dockThumbnailMenu) {
                 dockThumbnailMenu.close();
+				dockThumbnailMenu = null;
             }
-            dockThumbnailMenu = null;
         } else {
             let maxWidth = 0;
             let thumbnailNum = windows.length;
@@ -1174,7 +1176,7 @@ ShowDesktopTooltip.prototype = {
         this.dockIcon.actor.reactive = true;
         this.dockIcon.actor.connect('enter-event', Lang.bind(this, this.openMenu));
         this.dockIcon.actor.connect('leave-event', Lang.bind(this, this.requestCloseMenu));
-		this.actor.style_class = 'dock-tooltip-window';
+        this.actor.style_class = 'dock-tooltip-window';
 
         this.openMenu();
     },
