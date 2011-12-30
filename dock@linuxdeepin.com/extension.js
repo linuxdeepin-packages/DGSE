@@ -29,6 +29,7 @@ const Gettext = imports.gettext;
 const THUMBNAIL_DEFAULT_WIDTH = 250;
 const THUMBNAIL_DISAPPEAR_TIMEOUT = 100; // milliseconds
 const TOOLTIP_DISAPPEAR_TIMEOUT = 100; // milliseconds
+const TOOLTIP_AUTO_DISAPPEAR_TIMEOUT = 3000; // milliseconds
 
 //hide
 let dockIconSize;
@@ -355,7 +356,8 @@ DockIcon.prototype = {
 
         this.actor.connect('button-press-event', Lang.bind(this, this._onButtonPress));
         this.actor.connect('destroy', Lang.bind(this, this._onDestroy));
-        this.actor.connect('notify::hover', Lang.bind(this, this._hoverChanged));
+        // this.actor.connect('notify::hover', Lang.bind(this, this._hoverChanged));
+        this.actor.connect('enter-event', Lang.bind(this, this._hoverChanged));
 
         this._menuTimeoutId = 0;
         this._stateChangedId = this.app.connect('notify::state',
@@ -457,6 +459,16 @@ DockIcon.prototype = {
         } else if (button == 3) {
             this.popupMenu();
         }
+		
+		if (appNameTooltip) {
+			appNameTooltip.close();
+			appNameTooltip = null;
+		}
+		
+		if (dockThumbnailMenu) {
+			dockThumbnailMenu.close();
+			dockThumbnailMenu = null;
+		}
     },
 
     _onClicked: function(actor, button) {
@@ -471,6 +483,16 @@ DockIcon.prototype = {
             this.emit('launching');
             this.app.open_new_window(-1);
         }
+
+		if (appNameTooltip) {
+			appNameTooltip.close();
+			appNameTooltip = null;
+		}
+		
+		if (dockThumbnailMenu) {
+			dockThumbnailMenu.close();
+			dockThumbnailMenu = null;
+		}
 
         return false;
     },
@@ -498,7 +520,7 @@ DockIcon.prototype = {
         }
 
         this._menu.popup();
-
+		
         return false;
     },
 
