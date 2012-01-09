@@ -16,70 +16,77 @@ const Switcher = CoverflowAltTab.switcher;
  * This class handles window events, so we can keep a stack of windows ordered
  * by the most recently focused window.
  */
-function Manager() {
-	this._init();
+function Manager(_) {
+    this._init(_);
 }
 
 Manager.prototype = {
-	_init: function() {
-	},
+    _init: function(_) {
+        this._ = _;
+    },
 
-	_startWindowSwitcher: function (shellwm, binding, mask, window, backwards) {
-		let windows = [];
-		let currentWorkspace = global.screen.get_active_workspace();
-		let currentIndex = 0;
+    _startWindowSwitcher: function (shellwm, binding, mask, window, backwards) {
+        let switcher = new Switcher.Switcher(this._);
 
-		// construct a list with all windows
-		let windowActors = global.get_window_actors();
-		for (let i in windowActors) {
-			windows.push(windowActors[i].get_meta_window());
-		}
-		windowActors = null;
-		windows.sort(Lang.bind(this,
-			function(win1, win2) {
-				let t1 = win1.get_user_time();
-				let t2 = win2.get_user_time();
+        if (!switcher.show(shellwm, binding, mask, window, backwards)) {
+            switcher.destroy();
+        }
 
-				return (t2 > t1) ? 1 : -1 ;
-			}
-		));
+        // let windows = [];
+        // let currentWorkspace = global.screen.get_active_workspace();
+        // let currentIndex = 0;
 
-		// filter by modes
-		if (binding == 'switch_group') {
-			windows = windows.filter(
-				function(win) {
-					return win.get_workspace() == currentWorkspace && !win.is_skip_taskbar();
-				}
-			);
-		} else if (binding == 'switch_panels') {
-			let focused = global.display.focus_window;
-			if (!focused)
-				focused = windows[0];
+        // // construct a list with all windows
+        // let windowActors = global.get_window_actors();
+        // for (let i in windowActors) {
+        //     windows.push(windowActors[i].get_meta_window());
+        // }
+        // windowActors = null;
+        // windows.sort(Lang.bind(this,
+        //                        function(win1, win2) {
+        //                            let t1 = win1.get_user_time();
+        //                            let t2 = win2.get_user_time();
 
-			windows = windows.filter(
-				function(win) {
-					return win.get_wm_class() == focused.get_wm_class() && !win.is_skip_taskbar();
-				}
-			);
-		} else {
-			windows = windows.filter(
-				function(win) {
-					return !win.is_skip_taskbar();
-				}
-			);
-		}
+        //                            return (t2 > t1) ? 1 : -1 ;
+        //                        }
+        //                       ));
 
-		if (windows.length) {
-			if (!global.display.focus_window) {
-				currentIndex = -1;
-			}
+        // // filter by modes
+        // if (binding == 'switch_group') {
+        //     windows = windows.filter(
+        //         function(win) {
+        //             return win.get_workspace() == currentWorkspace && !win.is_skip_taskbar();
+        //         }
+        //     );
+        // } else if (binding == 'switch_panels') {
+        //     let focused = global.display.focus_window;
+        //     if (!focused)
+        //         focused = windows[0];
 
-			let switcher = new Switcher.Switcher(windows);
-			switcher._currentIndex = currentIndex;
+        //     windows = windows.filter(
+        //         function(win) {
+        //             return win.get_wm_class() == focused.get_wm_class() && !win.is_skip_taskbar();
+        //         }
+        //     );
+        // } else {
+        //     windows = windows.filter(
+        //         function(win) {
+        //             return !win.is_skip_taskbar();
+        //         }
+        //     );
+        // }
 
-			if (!switcher.show(shellwm, binding, mask, window, backwards)) {
-				switcher.destroy();
-			}
-		}
-	}
+        // if (windows.length) {
+        //     if (!global.display.focus_window) {
+        //         currentIndex = -1;
+        //     }
+
+        //     let switcher = new Switcher.Switcher(windows, this._);
+        //     switcher._currentIndex = currentIndex;
+
+        //     if (!switcher.show(shellwm, binding, mask, window, backwards)) {
+        //         switcher.destroy();
+        //     }
+        // }
+    }
 };
