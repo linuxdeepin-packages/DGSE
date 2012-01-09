@@ -296,7 +296,7 @@ Switcher.prototype = {
             windows[i].hide();
         }
 
-        this._next();
+        this.next();
 
         // There's a race condition; if the user released Alt before
         // we gotthe grab, then we won't be notified. (See
@@ -318,15 +318,25 @@ Switcher.prototype = {
         return true;
     },
 
-    _next: function() {
+    next: function() {
         this._currentIndex = (this._currentIndex + 1) % this._previews.length;
         this._updateCoverflow();
     },
 
-    _previous: function() {
+    previous: function() {
         this._currentIndex = (this._currentIndex + this._previews.length - 1) % this._previews.length;
         this._updateCoverflow();
     },
+
+	home: function() {
+		this._currentIndex = 0;
+		this._updateCoverflow();
+	},
+
+	end: function() {
+		this._currentIndex = this._previews.length - 1;
+		this._updateCoverflow();
+	},
 
     _updateCoverflow: function() {
         let monitor = Main.layoutManager.primaryMonitor;
@@ -416,12 +426,16 @@ Switcher.prototype = {
                    action == Meta.KeyBindingAction.SWITCH_GROUP ||
                    action == Meta.KeyBindingAction.SWITCH_WINDOWS ||
                    action == Meta.KeyBindingAction.SWITCH_PANELS) {
-            backwards ? this._previous() : this._next();
+            backwards ? this.previous() : this.next();
         } else if (keysym == Clutter.Left ||
                    action == Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD ||
                    action == Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD) {
-            this._previous();
-        }
+            this.previous();
+        } else if (keysym == Clutter.Home) {
+			this.home();
+		} else if (keysym == Clutter.End) {
+			this.end();
+		}
 
         return true;
     },
