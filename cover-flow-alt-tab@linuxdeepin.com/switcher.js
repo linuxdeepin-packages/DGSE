@@ -18,17 +18,16 @@ const Tweener = imports.ui.tweener;
 
 let WINDOWPREVIEW_SCALE = 0.5;
 
-function Switcher(windows, actions) {
-	this._init(windows, actions);
+function Switcher(windows) {
+	this._init(windows);
 }
 
 Switcher.prototype = {
-	_init: function(windows, actions) {
+	_init: function(windows) {
 		this._windows = windows;
 		this._windowTitle = null;
 		this._modifierMask = null;
 		this._currentIndex = 0;
-		this._actions = actions;
 		this._haveModal = false;
 
 		let monitor = Main.layoutManager.primaryMonitor;
@@ -165,7 +164,7 @@ Switcher.prototype = {
 		this._windowTitle.add_style_class_name('coverflow-window-title-label');
 		this._background.add_actor(this._windowTitle);
 		this._windowTitle.x = (monitor.width - this._windowTitle.width) / 2;
-		this._windowTitle.y = monitor.height - this._windowTitle.height - 20;
+		this._windowTitle.y = monitor.height / 6;
 		Tweener.addTween(this._windowTitle, {
 			opacity: 255,
 			time: 0.25,
@@ -192,10 +191,10 @@ Switcher.prototype = {
 				preview.raise_top();
 				Tweener.addTween(preview, {
 					opacity: 255,
-					x: monitor.width * 0.2 - preview.target_width_side / 2 + 25 * (i - this._currentIndex),
-					y: (monitor.height - preview.target_height_side) / 2,
-					width: preview.target_width_side,
-					height: preview.target_height_side,
+					x: monitor.width * 0.2 - (preview.target_width_side * 3 / 5) / 2 + 25 * (i - this._currentIndex) + 50,
+					y: (monitor.height - preview.target_height_side * 3 / 5) / 2,
+					width: preview.target_width_side * 3 / 5,
+					height: preview.target_height_side * 3 / 5,
 					rotation_angle_y: 60.0,
 					time: 0.25,
 					transition: 'easeOutQuad'
@@ -225,14 +224,13 @@ Switcher.prototype = {
 
 		if (keysym == Clutter.Escape) {
 			this.destroy();
-		} else if (keysym == Clutter.q || keysym == Clutter.Q) {
-			this._actions['remove_selected'](this._windows[this._currentIndex]);
-			this.destroy();
-		} else if (action == Meta.KeyBindingAction.SWITCH_GROUP ||
+		} else if (keysym == Clutter.Right || 
+				   action == Meta.KeyBindingAction.SWITCH_GROUP ||
 				   action == Meta.KeyBindingAction.SWITCH_WINDOWS ||
 				   action == Meta.KeyBindingAction.SWITCH_PANELS) {
 			backwards ? this._previous() : this._next();
-		} else if (action == Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD ||
+		} else if (keysym == Clutter.Left || 
+				   action == Meta.KeyBindingAction.SWITCH_GROUP_BACKWARD ||
 				   action == Meta.KeyBindingAction.SWITCH_WINDOWS_BACKWARD) {
 			this._previous();
 		}
@@ -252,7 +250,7 @@ Switcher.prototype = {
 	},
 
 	_activateSelected: function() {
-		this._actions['activate_selected'](this._windows[this._currentIndex]);
+		Main.activateWindow(this._windows[this._currentIndex]);
 		this.destroy();
 	},
 

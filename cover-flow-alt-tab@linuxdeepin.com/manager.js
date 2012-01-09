@@ -24,17 +24,8 @@ Manager.prototype = {
 	_init: function() {
 	},
 
-	_activateSelectedWindow: function(win) {
-		Main.activateWindow(win);
-	},
-
-	_removeSelectedWindow: function(win) {
-		win.delete(global.get_current_time());
-	},
-
 	_startWindowSwitcher: function (shellwm, binding, mask, window, backwards) {
 		let windows = [];
-		let actions = {};
 		let currentWorkspace = global.screen.get_active_workspace();
 		let currentIndex = 0;
 
@@ -79,14 +70,11 @@ Manager.prototype = {
 		}
 
 		if (windows.length) {
-			actions['activate_selected'] = this._activateSelectedWindow;
-			actions['remove_selected'] = this._removeSelectedWindow;
-
 			if (!global.display.focus_window) {
 				currentIndex = -1;
 			}
 
-			let switcher = new Switcher.Switcher(windows, actions);
+			let switcher = new Switcher.Switcher(windows);
 			switcher._currentIndex = currentIndex;
 
 			if (!switcher.show(shellwm, binding, mask, window, backwards)) {
