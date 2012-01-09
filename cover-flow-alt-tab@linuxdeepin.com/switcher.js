@@ -190,8 +190,8 @@ Switcher.prototype = {
 			} else if (i < this._currentIndex) {
 				preview.raise_top();
 				Tweener.addTween(preview, {
-					opacity: 255,
-					x: monitor.width * 0.2 - (preview.target_width_side * 3 / 5) / 2 + 25 * (i - this._currentIndex) + 50,
+					opacity: 250,
+					x: monitor.width * 0.2 - (preview.target_width_side * 2 / 5) / 2 + 25 * (i - this._currentIndex),
 					y: (monitor.height - preview.target_height_side * 3 / 5) / 2,
 					width: preview.target_width_side * 3 / 5,
 					height: preview.target_height_side * 3 / 5,
@@ -202,7 +202,7 @@ Switcher.prototype = {
 			} else if (i > this._currentIndex) {
 				preview.lower_bottom();
 				Tweener.addTween(preview, {
-					opacity: 255,
+					opacity: 250,
 					x: monitor.width * 0.8 - preview.target_width_side / 2 + 25 * (i - this._currentIndex),
 					y: (monitor.height - preview.target_height_side) / 2,
 					width: preview.target_width_side,
