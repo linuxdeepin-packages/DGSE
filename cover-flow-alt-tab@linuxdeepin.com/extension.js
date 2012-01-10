@@ -92,9 +92,9 @@ SwitchActor.prototype = {
         // Scale workspace windows.
         let apps = Shell.AppSystem.get_default().get_running();
         let workspaceWindows = [];
-        for (let i = 0; i < apps.length; i++) {
+        for (let i in apps) {
             let windows = apps[i].get_windows();
-            for (let j = 0; j < windows.length; j++) {
+            for (let j in windows) {
                 if (windows[j].get_workspace().index() == workspaceIndex) {
                     workspaceWindows.push(windows[j]);
                 }
@@ -105,7 +105,7 @@ SwitchActor.prototype = {
         workspaceWindows.sort(Lang.bind(this, this.sortWindow));
 
         // Add workspace windows.
-        for (let ii = 0; ii < workspaceWindows.length; ii++) {
+        for (let ii in workspaceWindows) {
             let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
             let rect = workspaceWindows[ii].get_outer_rect();
             let windowClone = new Clutter.Clone(
@@ -254,37 +254,37 @@ Switcher.prototype = {
 
     getSwitchActors: function() {
         let activeWorkspace = global.screen.get_active_workspace();
-        let workspaceIcons = [];
+        let windowActors = [];
         let otherWorkspaces = {};
         let apps = Shell.AppSystem.get_default().get_running ();
 
-        for (let i = 0; i < apps.length; i++) {
+        for (let i in apps) {
             let windows = apps[i].get_windows();
-            for(let j = 0; j < windows.length; j++) {
-                let appIcon = new SwitchActor(apps[i], windows[j]);
+            for(let j in windows) {
+                let switchActor = new SwitchActor(apps[i], windows[j]);
 
                 if (this.isWindowOnWorkspace(windows[j], activeWorkspace)) {
                     // Add application in current workspace to list.
-                    workspaceIcons.push(appIcon);
+                    windowActors.push(switchActor);
                 } else {
                     // Add other worspace.
                     let workspaceIndex = windows[j].get_workspace().index();
                     if (otherWorkspaces[workspaceIndex]) {
-                        if (appIcon.window.get_user_time() > otherWorkspaces[workspaceIndex].window.get_user_time()) {
+                        if (switchActor.window.get_user_time() > otherWorkspaces[workspaceIndex].window.get_user_time()) {
                             // Update topest application in workspace dict.
-                            otherWorkspaces[workspaceIndex] = appIcon;
+                            otherWorkspaces[workspaceIndex] = switchActor;
                         }
                     } else {
                         // Fill workspace this is first application.
-                        otherWorkspaces[workspaceIndex] = appIcon;
+                        otherWorkspaces[workspaceIndex] = switchActor;
                     }
                 }
             }
         }
 
-        workspaceIcons.sort(Lang.bind(this, this.sortAppIcon));
+        windowActors.sort(Lang.bind(this, this.sortAppIcon));
 
-        let workspaces = [];
+        let workspaceActors = [];
 
         // Sort workspace by index.
         let keys = [];
@@ -293,11 +293,11 @@ Switcher.prototype = {
         }
         keys.sort();
 
-        for (let jj = 0; jj < keys.length; jj++) {
-            workspaces.push(otherWorkspaces[keys[jj]]);
+        for (let jj in keys) {
+            workspaceActors.push(otherWorkspaces[keys[jj]]);
         }
 
-        return [workspaceIcons, workspaces];
+        return [windowActors, workspaceActors];
     },
 
     show: function(shellwm, binding, mask, window, backwards) {
@@ -550,8 +550,8 @@ Switcher.prototype = {
 };
 
 function startWindowSwitcher(shellwm, binding, mask, window, backwards) {
-	switcher = new Switcher();
-	
+    switcher = new Switcher();
+
     if (!switcher.show(shellwm, binding, mask, window, backwards)) {
         switcher.destroy();
     }
