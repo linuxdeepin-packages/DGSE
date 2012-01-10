@@ -190,52 +190,52 @@ function Switcher() {
 
 Switcher.prototype = {
     _init: function() {
-        this._windowTitle = null;
-        this._modifierMask = null;
-        this._currentIndex = 0;
-        this._haveModal = false;
+        this.windowTitle = null;
+        this.modifierMask = null;
+        this.currentIndex = 0;
+        this.haveModal = false;
 
         let monitor = Main.layoutManager.primaryMonitor;
         this.actor = new St.Group({ visible: true });
 
         // background
-        this._background = new St.Group({
-                                            style_class: 'coverflow-switcher',
-                                            visible: true,
-                                            x: 0,
-                                            y: 0,
-                                            opacity: 0,
-                                            width: monitor.width,
-                                            height: monitor.height
-                                        });
-        this._background.add_actor(new St.Bin({
-                                                  style_class: 'coverflow-switcher-gradient',
-                                                  visible: true,
-                                                  x: 0,
-                                                  y: monitor.height / 2,
-                                                  width: monitor.width,
-                                                  height: monitor.height / 2
-                                              }));
-        this.actor.add_actor(this._background);
+        this.background = new St.Group(
+            {style_class: 'coverflow-switcher',
+             visible: true,
+             x: 0,
+             y: 0,
+             opacity: 0,
+             width: monitor.width,
+             height: monitor.height
+            });
+        this.background.add_actor(new St.Bin(
+                                      {style_class: 'coverflow-switcher-gradient',
+                                       visible: true,
+                                       x: 0,
+                                       y: monitor.height / 2,
+                                       width: monitor.width,
+                                       height: monitor.height / 2
+                                      }));
+        this.actor.add_actor(this.background);
 
         // create previews
         let currentWorkspace = global.screen.get_active_workspace();
-        this._previewLayer = new St.Group({ visible: true });
-        this._previews = [];
+        this.previewLayer = new St.Group({ visible: true });
+        this.previews = [];
 
         [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
 
         for (let w in this.switchWindows) {
-            this._previews.push(this.switchWindows[w]);
-            this._previewLayer.add_actor(this.switchWindows[w].clone);
+            this.previews.push(this.switchWindows[w]);
+            this.previewLayer.add_actor(this.switchWindows[w].clone);
         }
 
         for (let s in this.switchWorkspaces) {
-            this._previews.push(this.switchWorkspaces[s]);
-            this._previewLayer.add_actor(this.switchWorkspaces[s].clone);
+            this.previews.push(this.switchWorkspaces[s]);
+            this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
 
-        this.actor.add_actor(this._previewLayer);
+        this.actor.add_actor(this.previewLayer);
         Main.uiGroup.add_actor(this.actor);
     },
 
@@ -305,11 +305,11 @@ Switcher.prototype = {
             return false;
         }
 
-        this._haveModal = true;
-        this._modifierMask = AltTab.primaryModifier(mask);
+        this.haveModal = true;
+        this.modifierMask = AltTab.primaryModifier(mask);
 
-        this.actor.connect('key-press-event', Lang.bind(this, this._keyPressEvent));
-        this.actor.connect('key-release-event', Lang.bind(this, this._keyReleaseEvent));
+        this.actor.connect('key-press-event', Lang.bind(this, this.keyPressEvent));
+        this.actor.connect('key-release-event', Lang.bind(this, this.keyReleaseEvent));
         this.actor.show();
 
         // hide all window actors
@@ -326,12 +326,12 @@ Switcher.prototype = {
         // details) So we check now. (Have to do this after updating
         // selection.)
         let [x, y, mods] = global.get_pointer();
-        if (!(mods & this._modifierMask)) {
-            this._activateSelected();
+        if (!(mods & this.modifierMask)) {
+            this.activateSelected();
             return false;
         }
 
-        Tweener.addTween(this._background, {
+        Tweener.addTween(this.background, {
                              opacity: 255,
                              time: 0.25,
                              transition: 'easeOutQuad'
@@ -341,58 +341,58 @@ Switcher.prototype = {
     },
 
     next: function() {
-        this._currentIndex = (this._currentIndex + 1) % this._previews.length;
-        this._updateCoverflow();
+        this.currentIndex = (this.currentIndex + 1) % this.previews.length;
+        this.updateCoverflow();
     },
 
     previous: function() {
-        this._currentIndex = (this._currentIndex + this._previews.length - 1) % this._previews.length;
-        this._updateCoverflow();
+        this.currentIndex = (this.currentIndex + this.previews.length - 1) % this.previews.length;
+        this.updateCoverflow();
     },
 
     home: function() {
-        this._currentIndex = 0;
-        this._updateCoverflow();
+        this.currentIndex = 0;
+        this.updateCoverflow();
     },
 
     end: function() {
-        this._currentIndex = this._previews.length - 1;
-        this._updateCoverflow();
+        this.currentIndex = this.previews.length - 1;
+        this.updateCoverflow();
     },
 
-    _updateCoverflow: function() {
+    updateCoverflow: function() {
         let monitor = Main.layoutManager.primaryMonitor;
 
         // window title label
-        if (this._windowTitle) {
-            Tweener.addTween(this._windowTitle, {
+        if (this.windowTitle) {
+            Tweener.addTween(this.windowTitle, {
                                  opacity: 0,
                                  time: 0.25,
                                  transition: 'easeOutQuad',
-                                 onComplete: Lang.bind(this._background, this._background.remove_actor, this._windowTitle)
+                                 onComplete: Lang.bind(this.background, this.background.remove_actor, this.windowTitle)
                              });
         }
-        this._windowTitle = new St.Label(
+        this.windowTitle = new St.Label(
             {style_class: 'modal-dialog',
-             text: this._previews[this._currentIndex].getTitle(),
+             text: this.previews[this.currentIndex].getTitle(),
              opacity: 0
             });
-        this._windowTitle.add_style_class_name('run-dialog');
-        this._windowTitle.add_style_class_name('coverflow-window-title-label');
-        this._background.add_actor(this._windowTitle);
-        this._windowTitle.x = (monitor.width - this._windowTitle.width) / 2;
-        this._windowTitle.y = monitor.height / 6;
-        Tweener.addTween(this._windowTitle, {
+        this.windowTitle.add_style_class_name('run-dialog');
+        this.windowTitle.add_style_class_name('coverflow-window-title-label');
+        this.background.add_actor(this.windowTitle);
+        this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
+        this.windowTitle.y = monitor.height / 6;
+        Tweener.addTween(this.windowTitle, {
                              opacity: 255,
                              time: 0.25,
                              transition: 'easeOutQuad'
                          });
 
         // preview windows
-        for (let i in this._previews) {
-            let preview = this._previews[i];
+        for (let i in this.previews) {
+            let preview = this.previews[i];
 
-            if (i == this._currentIndex) {
+            if (i == this.currentIndex) {
                 preview.clone.raise_top();
                 Tweener.addTween(
                     preview.clone,
@@ -405,12 +405,12 @@ Switcher.prototype = {
                      time: 0.25,
                      transition: 'easeOutQuad'
                     });
-            } else if (i < this._currentIndex) {
+            } else if (i < this.currentIndex) {
                 preview.clone.raise_top();
                 Tweener.addTween(
                     preview.clone,
                     {opacity: 250,
-                     x: monitor.width * 0.2 - (preview.target_width_side * 2 / 5) / 2 + 25 * (i - this._currentIndex),
+                     x: monitor.width * 0.2 - (preview.target_width_side * 2 / 5) / 2 + 25 * (i - this.currentIndex),
                      y: (monitor.height - preview.target_height_side * 3 / 5) / 2,
                      width: preview.target_width_side * 3 / 5,
                      height: preview.target_height_side * 3 / 5,
@@ -418,12 +418,12 @@ Switcher.prototype = {
                      time: 0.25,
                      transition: 'easeOutQuad'
                     });
-            } else if (i > this._currentIndex) {
+            } else if (i > this.currentIndex) {
                 preview.clone.lower_bottom();
                 Tweener.addTween(
                     preview.clone,
                     {opacity: 250,
-                     x: monitor.width * 0.8 - preview.target_width_side / 2 + 25 * (i - this._currentIndex),
+                     x: monitor.width * 0.8 - preview.target_width_side / 2 + 25 * (i - this.currentIndex),
                      y: (monitor.height - preview.target_height_side) / 2,
                      width: preview.target_width_side,
                      height: preview.target_height_side,
@@ -435,7 +435,7 @@ Switcher.prototype = {
         }
     },
 
-    _keyPressEvent: function(actor, event) {
+    keyPressEvent: function(actor, event) {
         let keysym = event.get_key_symbol();
         let event_state = Shell.get_event_state(event);
 
@@ -462,24 +462,24 @@ Switcher.prototype = {
         return true;
     },
 
-    _keyReleaseEvent: function(actor, event) {
+    keyReleaseEvent: function(actor, event) {
         let [x, y, mods] = global.get_pointer();
-        let state = mods & this._modifierMask;
+        let state = mods & this.modifierMask;
 
         if (state == 0) {
-            this._activateSelected();
+            this.activateSelected();
         }
 
         return true;
     },
 
-    _activateSelected: function() {
+    activateSelected: function() {
         Main.activateWindow(this.getCurrentWindow());
 
         this.destroy();
     },
 
-    _onHideBackgroundCompleted: function() {
+    onHideBackgroundCompleted: function() {
         Main.uiGroup.remove_actor(this.actor);
 
         // show all window actors
@@ -494,20 +494,20 @@ Switcher.prototype = {
     },
 
     getWindowByIndex: function(index) {
-        return this._previews[index].window;
+        return this.previews[index].window;
     },
 
     getCurrentWindow: function() {
-        return this.getWindowByIndex(this._currentIndex);
+        return this.getWindowByIndex(this.currentIndex);
     },
 
-    _onDestroy: function() {
+    onDestroy: function() {
         let monitor = Main.layoutManager.primaryMonitor;
 
         // preview windows
         let currentWorkspace = global.screen.get_active_workspace();
-        for (let i in this._previews) {
-            let preview = this._previews[i];
+        for (let i in this.previews) {
+            let preview = this.previews[i];
             let metaWin = this.getWindowByIndex(i);
             let compositor = metaWin.get_compositor_private();
 
@@ -525,27 +525,27 @@ Switcher.prototype = {
         }
 
         // background
-        Tweener.removeTweens(this._background);
+        Tweener.removeTweens(this.background);
         Tweener.addTween(
-            this._background,
+            this.background,
             {opacity: 0,
              time: 0.25,
              transition: 'easeOutQuad',
-             onComplete: Lang.bind(this, this._onHideBackgroundCompleted)
+             onComplete: Lang.bind(this, this.onHideBackgroundCompleted)
             });
 
-        if (this._haveModal) {
+        if (this.haveModal) {
             Main.popModal(this.actor);
-            this._haveModal = false;
+            this.haveModal = false;
         }
 
-        this._windowTitle = null;
-        this._previews = null;
-        this._previewLayer = null;
+        this.windowTitle = null;
+        this.previews = null;
+        this.previewLayer = null;
     },
 
     destroy: function() {
-        this._onDestroy();
+        this.onDestroy();
     }
 };
 
