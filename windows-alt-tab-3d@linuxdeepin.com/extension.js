@@ -245,7 +245,7 @@ Switcher.prototype = {
             let workspaceHeight = monitor.height * scale;
             let workspacePaddingX = 15;
             let workspacePaddingY = 30;
-			let activeWorkspace = global.screen.get_active_workspace();
+            let activeWorkspace = global.screen.get_active_workspace();
 
             this.workspaceBox = new St.BoxLayout({visible: true,
                                                   vertical: false});
@@ -259,6 +259,7 @@ Switcher.prototype = {
             for (let wi in this.workspaceIndexes) {
                 let workspaceClone = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
+                workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
                     workspaceWidth + workspacePaddingX * 2,
                     workspaceHeight + workspacePaddingY * 2
@@ -275,6 +276,17 @@ Switcher.prototype = {
             this.workspaceBox.set_position(
                 (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
                 monitor.height - workspaceHeight - workspacePaddingY);
+
+            for (let wl in this.workspaces) {
+                Tweener.addTween(
+                    this.workspaces[wl],
+                    {
+                        opacity: 255,
+                        time: 1,
+                        transition: 'easeOutQuad'
+                    }
+                );
+            }
 
             this.actor.add_actor(this.previewLayer);
             this.actor.add_actor(this.workspaceBox);
