@@ -1,16 +1,8 @@
-/* -*- mode: js2; js2-basic-offset: 4; indent-tabs-mode: nil -*- */
-
-/*
- * Gnome-shell extension specific routines.
- *
- * register/unregister keybinding handlers, etc.
- */
-
 const Lang = imports.lang;
 const Main = imports.ui.main;
 
 const Gettext = imports.gettext;
-
+const Gtk = imports.gi.Gtk;
 const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 const Meta = imports.gi.Meta;
@@ -23,6 +15,99 @@ let SWITCH_ACTOR_SCALE = 0.5;
 let switcher = null;
 let _;
 
+function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
+    // Get monitor size and scale value.
+    let monitor = Main.layoutManager.primaryMonitor;
+    let width = monitor.width;
+    let height = monitor.height;
+
+    // Create actor group.
+    let workspaceClone = new Clutter.Group(
+        {clip_to_allocation: true,
+         rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
+         reactive: false
+        });
+    workspaceClone.set_size(targetWidth, targetHeight);
+
+    // Add background.
+    let background = Meta.BackgroundActor.new_for_screen(global.screen);
+    background.set_scale(scale, scale);
+    workspaceClone.add_actor(background);
+
+    // Add panel.
+    let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+    let panel = new Clutter.Clone(
+        {source: Main.panel.actor,
+         reactive: false,
+         x: 0,
+         y: 0,
+         width: panelWidth * scale,
+         height: panelHeight * scale
+        }
+    );
+    workspaceClone.add_actor(panel);
+
+    // Scale workspace windows.
+    let apps = Shell.AppSystem.get_default().get_running();
+    let workspaceWindows = [];
+    for (let i in apps) {
+        let windows = apps[i].get_windows();
+        for (let j in windows) {
+            if (windows[j].get_workspace().index() == workspaceIndex) {
+                workspaceWindows.push(windows[j]);
+            }
+        }
+    }
+
+    // Sort workspace windows.
+    workspaceWindows.sort(sortWindow);
+
+    // Add workspace windows.
+    for (let ii in workspaceWindows) {
+        let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
+        let rect = workspaceWindows[ii].get_outer_rect();
+        let windowClone = new Clutter.Clone(
+            {source: windowTexture,
+             reactive: false,
+             x: rect.x * scale,
+             y: rect.y * scale,
+             width: rect.width * scale,
+             height: rect.height * scale
+            });
+
+        workspaceClone.add_actor(windowClone);
+    }
+
+    return workspaceClone;
+}
+
+function getWindowClone(window, targetWidth, targetHeight, scale) {
+    let monitor = Main.layoutManager.primaryMonitor;
+    let compositor = window.get_compositor_private();
+    let texture = compositor.get_texture();
+
+    let windowClone = new Clutter.Clone(
+        {opacity: 255,
+         source: texture,
+         reactive: false,
+         rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
+         x: compositor.x,
+         y: compositor.y
+        });
+
+    return windowClone;
+}
+
+function sortWindow(window1, window2) {
+    let t1 = window1.get_user_time();
+    let t2 = window2.get_user_time();
+    if (t2 < t1) {
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
 function SwitchActor(app, window) {
     this._init(app, window);
 }
@@ -34,8 +119,8 @@ SwitchActor.prototype = {
         let activeWorkspace = global.screen.get_active_workspace();
         this.isWorkspace = !(window.get_workspace() == activeWorkspace);
 
-		this.initActorSize();
-		this.initActorClone();
+        this.initActorSize();
+        this.initActorClone();
     },
 
     getTitle: function() {
@@ -81,105 +166,22 @@ SwitchActor.prototype = {
             this.target_height_side = height * this.scale * 0.7;
         }
     },
-	
-	initActorClone: function() {
+
+    initActorClone: function() {
         if (this.isWorkspace) {
-            this.clone = this.getWorkspaceClone(this.window.get_workspace().index());
+            this.clone = getWorkspaceClone(
+                this.window.get_workspace().index(),
+                this.target_width,
+                this.target_height,
+                this.scale
+            );
         } else {
-            this.clone = this.getWindowClone();
-        }
-	},
-
-    getWorkspaceClone: function(workspaceIndex) {
-        // Get monitor size and scale value.
-        let monitor = Main.layoutManager.primaryMonitor;
-        let width = monitor.width;
-        let height = monitor.height;
-
-        // Create actor group.
-        let workspaceClone = new Clutter.Group(
-            {clip_to_allocation: true,
-             rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
-             reactive: false
-            });
-        workspaceClone.set_size(this.target_width, this.target_height);
-
-        // Add background.
-        let background = Meta.BackgroundActor.new_for_screen(global.screen);
-        background.set_scale(this.scale, this.scale);
-        workspaceClone.add_actor(background);
-
-        // Add panel.
-        let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        let panel = new Clutter.Clone(
-            {source: Main.panel.actor,
-             reactive: false,
-             x: 0,
-             y: 0,
-             width: panelWidth * this.scale,
-             height: panelHeight * this.scale
-            }
-        );
-        workspaceClone.add_actor(panel);
-
-        // Scale workspace windows.
-        let apps = Shell.AppSystem.get_default().get_running();
-        let workspaceWindows = [];
-        for (let i in apps) {
-            let windows = apps[i].get_windows();
-            for (let j in windows) {
-                if (windows[j].get_workspace().index() == workspaceIndex) {
-                    workspaceWindows.push(windows[j]);
-                }
-            }
-        }
-
-        // Sort workspace windows.
-        workspaceWindows.sort(Lang.bind(this, this.sortWindow));
-
-        // Add workspace windows.
-        for (let ii in workspaceWindows) {
-            let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
-            let rect = workspaceWindows[ii].get_outer_rect();
-            let windowClone = new Clutter.Clone(
-                {source: windowTexture,
-                 reactive: false,
-                 x: rect.x * this.scale,
-                 y: rect.y * this.scale,
-                 width: rect.width * this.scale,
-                 height: rect.height * this.scale
-                });
-
-            workspaceClone.add_actor(windowClone);
-        }
-
-        return workspaceClone;
-    },
-
-    getWindowClone: function() {
-        let monitor = Main.layoutManager.primaryMonitor;
-        let compositor = this.window.get_compositor_private();
-        let texture = compositor.get_texture();
-
-        let windowClone = new Clutter.Clone(
-            {opacity: 255,
-             source: texture,
-             reactive: false,
-             rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
-             x: compositor.x,
-             y: compositor.y
-            });
-
-        return windowClone;
-    },
-
-    sortWindow : function(window1, window2) {
-        let t1 = window1.get_user_time();
-        let t2 = window2.get_user_time();
-        if (t2 < t1) {
-            return 1;
-        } else {
-            return -1;
+            this.clone = getWindowClone(
+                this.window,
+                this.target_width,
+                this.target_height,
+                this.scale
+            );
         }
     }
 };
@@ -196,7 +198,8 @@ Switcher.prototype = {
         this.haveModal = false;
 
         let monitor = Main.layoutManager.primaryMonitor;
-        this.actor = new St.Group({ visible: true });
+        this.actor = new St.Group({ visible: true,
+                                    reactive: true});
 
         // background
         this.background = new St.Group(
@@ -236,17 +239,45 @@ Switcher.prototype = {
 
         // Add workspace previews.
         try {
-            this.workspaceLayer = new St.Group({visible: true});
-            for (let ws in this.switchWorkspaces) {
+            let monitor = Main.layoutManager.primaryMonitor;
+            let scale = 0.15;
+            let workspaceWidth = monitor.width * scale;
+            let workspaceHeight = monitor.height * scale;
+            let workspacePaddingX = 15;
+            let workspacePaddingY = 30;
+			let activeWorkspace = global.screen.get_active_workspace();
 
-                // let workspaceClone = this.getWorkspaceClone(this.switchWorkspaces[ws].window.get_workspace().index());
-                // this.workspaceLayer.add_actor(workspaceClone);
-                this.workspaceLayer.add_actor(this.switchWorkspaces[ws].clone);
+            this.workspaceBox = new St.BoxLayout({visible: true,
+                                                  vertical: false});
+            this.workspaceScrollView = new St.ScrollView({x_fill: true,
+                                                          y_fill: true});
+            this.workspaceScrollView.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
+            this.workspaceLayer = new St.BoxLayout({visible: true,
+                                                    vertical: false});
+            this.workspaces = [];
+
+            for (let wi in this.workspaceIndexes) {
+                let workspaceClone = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
+                let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
+                workspaceCloneBin.set_size(
+                    workspaceWidth + workspacePaddingX * 2,
+                    workspaceHeight + workspacePaddingY * 2
+                );
+                workspaceCloneBin.child = workspaceClone;
+                this.workspaceLayer.add(workspaceCloneBin);
+
+                this.workspaces.push(workspaceCloneBin);
             }
 
-            this.actor.add_actor(this.previewLayer);
-            this.actor.add_actor(this.workspaceLayer);
+            this.workspaceScrollView.add_actor(this.workspaceLayer);
+            this.workspaceBox.add_actor(this.workspaceScrollView);
 
+            this.workspaceBox.set_position(
+                (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
+                monitor.height - workspaceHeight - workspacePaddingY);
+
+            this.actor.add_actor(this.previewLayer);
+            this.actor.add_actor(this.workspaceBox);
         } catch (x) {
             global.log(x);
             throw x;
@@ -308,9 +339,24 @@ Switcher.prototype = {
         }
         keys.sort();
 
+        this.workspaceIndexes = [];
+
         for (let jj in keys) {
+            // Push workspace actor.
             workspaceActors.push(otherWorkspaces[keys[jj]]);
+
+            // Push workspace index.
+            this.workspaceIndexes.push(keys[jj]);
         }
+
+        // Push active workspace index.
+        this.workspaceIndexes.push(activeWorkspace.index());
+
+        // Sort workspace index.
+        this.workspaceIndexes.sort();
+
+        // Add last workspace index.
+        this.workspaceIndexes.push(this.workspaceIndexes[this.workspaceIndexes.length - 1] + 1);
 
         return [windowActors, workspaceActors];
     },
@@ -472,6 +518,14 @@ Switcher.prototype = {
             this.home();
         } else if (keysym == Clutter.End) {
             this.end();
+        } else {
+            let numKey = keysym - Clutter.KEY_0;
+            if (numKey > 0 && numKey < 10) {
+                if (this.workspaceIndexes[numKey - 1]) {
+                    global.screen.get_workspace_by_index(numKey - 1).activate(global.get_current_time());
+                    this.destroy();
+                }
+            }
         }
 
         return true;
@@ -534,7 +588,7 @@ Switcher.prototype = {
                 });
         }
 
-        // background
+        // Remove background.
         Tweener.removeTweens(this.background);
         Tweener.addTween(
             this.background,
@@ -543,6 +597,18 @@ Switcher.prototype = {
              transition: 'easeOutQuad',
              onComplete: Lang.bind(this, this.onHideBackgroundCompleted)
             });
+
+        // Remove workspace layer.
+        for (let wl in this.workspaces) {
+            Tweener.addTween(
+                this.workspaces[wl],
+                {
+                    opacity: 0,
+                    time: 0.25,
+                    transition: 'easeOutQuad'
+                }
+            );
+        }
 
         if (this.haveModal) {
             Main.popModal(this.actor);
@@ -576,8 +642,8 @@ function init(extensionMeta) {
 function enable() {
     Main.wm.setKeybindingHandler('switch_windows', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_group', startWindowSwitcher);
-    Main.wm.setKeybindingHandler('switch_panels', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_windows_backward', startWindowSwitcher);
+    Main.wm.setKeybindingHandler('switch_panels', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_group_backward', startWindowSwitcher);
 }
 
