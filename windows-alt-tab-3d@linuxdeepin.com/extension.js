@@ -34,11 +34,8 @@ SwitchActor.prototype = {
         let activeWorkspace = global.screen.get_active_workspace();
         this.isWorkspace = !(window.get_workspace() == activeWorkspace);
 
-        if (this.isWorkspace) {
-            this.initWorkspaceClone();
-        } else {
-            this.initWindowClone();
-        }
+		this.initActorSize();
+		this.initActorClone();
     },
 
     getTitle: function() {
@@ -50,31 +47,67 @@ SwitchActor.prototype = {
         }
     },
 
-    initWorkspaceClone: function() {
+    initActorSize: function() {
+        if (this.isWorkspace) {
+            let monitor = Main.layoutManager.primaryMonitor;
+            let width = monitor.width;
+            let height = monitor.height;
+
+            this.scale = 1.0;
+            if (width > monitor.width * SWITCH_ACTOR_SCALE ||
+                height > monitor.height * SWITCH_ACTOR_SCALE) {
+                this.scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
+            }
+
+            this.target_width = width * this.scale;
+            this.target_height = height * this.scale;
+            this.target_width_side = width * this.scale * 0.5;
+            this.target_height_side = height * this.scale * 0.7;
+        } else {
+            let monitor = Main.layoutManager.primaryMonitor;
+            let compositor = this.window.get_compositor_private();
+            let texture = compositor.get_texture();
+            let [width, height] = texture.get_size();
+
+            this.scale = 1.0;
+            if (width > monitor.width * SWITCH_ACTOR_SCALE ||
+                height > monitor.height * SWITCH_ACTOR_SCALE) {
+                this.scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
+            }
+
+            this.target_width = width * this.scale;
+            this.target_height = height * this.scale;
+            this.target_width_side = width * this.scale * 0.5;
+            this.target_height_side = height * this.scale * 0.7;
+        }
+    },
+	
+	initActorClone: function() {
+        if (this.isWorkspace) {
+            this.clone = this.getWorkspaceClone(this.window.get_workspace().index());
+        } else {
+            this.clone = this.getWindowClone();
+        }
+	},
+
+    getWorkspaceClone: function(workspaceIndex) {
         // Get monitor size and scale value.
-        let workspaceIndex = this.window.get_workspace().index();
         let monitor = Main.layoutManager.primaryMonitor;
         let width = monitor.width;
         let height = monitor.height;
 
-        let scale = 1.0;
-        if (width > monitor.width * SWITCH_ACTOR_SCALE ||
-            height > monitor.height * SWITCH_ACTOR_SCALE) {
-            scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
-        }
-
         // Create actor group.
-        this.clone = new Clutter.Group(
+        let workspaceClone = new Clutter.Group(
             {clip_to_allocation: true,
-             rotation_center_y: new Clutter.Vertex({ x: width * scale / 2, y: 0.0, z: 0.0 }),
+             rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
              reactive: false
             });
-        this.clone.set_size(monitor.width, monitor.height);
+        workspaceClone.set_size(this.target_width, this.target_height);
 
         // Add background.
         let background = Meta.BackgroundActor.new_for_screen(global.screen);
-        background.set_scale(scale, scale);
-        this.clone.add_actor(background);
+        background.set_scale(this.scale, this.scale);
+        workspaceClone.add_actor(background);
 
         // Add panel.
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
@@ -83,11 +116,11 @@ SwitchActor.prototype = {
              reactive: false,
              x: 0,
              y: 0,
-             width: panelWidth * scale,
-             height: panelHeight * scale
+             width: panelWidth * this.scale,
+             height: panelHeight * this.scale
             }
         );
-        this.clone.add_actor(panel);
+        workspaceClone.add_actor(panel);
 
         // Scale workspace windows.
         let apps = Shell.AppSystem.get_default().get_running();
@@ -111,19 +144,33 @@ SwitchActor.prototype = {
             let windowClone = new Clutter.Clone(
                 {source: windowTexture,
                  reactive: false,
-                 x: rect.x * scale,
-                 y: rect.y * scale,
-                 width: rect.width * scale,
-                 height: rect.height * scale
+                 x: rect.x * this.scale,
+                 y: rect.y * this.scale,
+                 width: rect.width * this.scale,
+                 height: rect.height * this.scale
                 });
 
-            this.clone.add_actor(windowClone);
+            workspaceClone.add_actor(windowClone);
         }
 
-        this.target_width = width * scale;
-        this.target_height = height * scale;
-        this.target_width_side = width * scale * 0.5;
-        this.target_height_side = height * scale * 0.7;
+        return workspaceClone;
+    },
+
+    getWindowClone: function() {
+        let monitor = Main.layoutManager.primaryMonitor;
+        let compositor = this.window.get_compositor_private();
+        let texture = compositor.get_texture();
+
+        let windowClone = new Clutter.Clone(
+            {opacity: 255,
+             source: texture,
+             reactive: false,
+             rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
+             x: compositor.x,
+             y: compositor.y
+            });
+
+        return windowClone;
     },
 
     sortWindow : function(window1, window2) {
@@ -134,53 +181,6 @@ SwitchActor.prototype = {
         } else {
             return -1;
         }
-    },
-
-    initWindowClone: function() {
-        let currentWorkspace = global.screen.get_active_workspace();
-        let monitor = Main.layoutManager.primaryMonitor;
-        let compositor = this.window.get_compositor_private();
-        let texture = compositor.get_texture();
-        let [width, height] = texture.get_size();
-
-        let scale = 1.0;
-        if (width > monitor.width * SWITCH_ACTOR_SCALE ||
-            height > monitor.height * SWITCH_ACTOR_SCALE) {
-            scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
-        }
-
-        // this.clone = new Clutter.Group({clip_to_allocation: false});
-        // this.clone = new Clutter.Group({clip_to_allocation: true});
-        // this.clone = new Clutter.Box();
-        // this.clone.set_size(width * scale, height * scale);
-
-        // let windowClone = new Clutter.Clone(
-
-        this.clone = new Clutter.Clone(
-            {opacity: (this.window.get_workspace() == currentWorkspace || this.window.is_on_all_workspaces()) ? 255 : 0,
-             source: texture,
-             reactive: false,
-             rotation_center_y: new Clutter.Vertex({ x: width * scale / 2, y: 0.0, z: 0.0 }),
-             x: compositor.x,
-             y: compositor.y
-            });
-
-        // this.clone.add_actor(windowClone);
-
-        // // If you found icon not alignment with window clone, it's not fault of program.
-        // // Because some icon's have blank pixel around icon.
-        // let appIconBoxSize = 42;
-        // let appIcon = this.app.create_icon_texture(appIconBoxSize);
-        // let appIconBox = new St.Bin();
-        // appIconBox.set_position(windowX + windowWidth - appIconBoxSize,
-        //                         windowY + windowHeight - appIconBoxSize);
-        // appIconBox.add_actor(appIcon);
-        // cloneBox.add_actor(appIconBox);
-
-        this.target_width = width * scale;
-        this.target_height = height * scale;
-        this.target_width_side = width * scale * 0.5;
-        this.target_height_side = height * scale * 0.7;
     }
 };
 
@@ -219,7 +219,6 @@ Switcher.prototype = {
         this.actor.add_actor(this.background);
 
         // create previews
-        let currentWorkspace = global.screen.get_active_workspace();
         this.previewLayer = new St.Group({ visible: true });
         this.previews = [];
 
@@ -235,7 +234,23 @@ Switcher.prototype = {
             this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
 
-        this.actor.add_actor(this.previewLayer);
+        // Add workspace previews.
+        try {
+            this.workspaceLayer = new St.Group({visible: true});
+            for (let ws in this.switchWorkspaces) {
+
+                // let workspaceClone = this.getWorkspaceClone(this.switchWorkspaces[ws].window.get_workspace().index());
+                // this.workspaceLayer.add_actor(workspaceClone);
+                this.workspaceLayer.add_actor(this.switchWorkspaces[ws].clone);
+            }
+
+            this.actor.add_actor(this.previewLayer);
+            this.actor.add_actor(this.workspaceLayer);
+
+        } catch (x) {
+            global.log(x);
+            throw x;
+        }
         Main.uiGroup.add_actor(this.actor);
     },
 
@@ -483,13 +498,9 @@ Switcher.prototype = {
         Main.uiGroup.remove_actor(this.actor);
 
         // show all window actors
-        let currentWorkspace = global.screen.get_active_workspace();
         let windows = global.get_window_actors();
         for (let i in windows) {
-            let metaWin = windows[i].get_meta_window();
-            if (metaWin.get_workspace() == currentWorkspace || metaWin.is_on_all_workspaces()) {
-                windows[i].show();
-            }
+            windows[i].show();
         }
     },
 
@@ -505,7 +516,6 @@ Switcher.prototype = {
         let monitor = Main.layoutManager.primaryMonitor;
 
         // preview windows
-        let currentWorkspace = global.screen.get_active_workspace();
         for (let i in this.previews) {
             let preview = this.previews[i];
             let metaWin = this.getWindowByIndex(i);
@@ -513,7 +523,7 @@ Switcher.prototype = {
 
             Tweener.addTween(
                 preview.clone,
-                {opacity: (metaWin.get_workspace() == currentWorkspace || metaWin.is_on_all_workspaces()) ? 255 : 0,
+                {opacity: 255,
                  x: compositor.x,
                  y: compositor.y,
                  width: compositor.width,
