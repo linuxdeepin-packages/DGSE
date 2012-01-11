@@ -135,6 +135,18 @@ SwitchActor.prototype = {
              time: 0.25,
              transition: 'easeOutQuad'
             });
+        try {
+            if (this.isWorkspace) {
+                global.log("test");
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  clone.set_scale(1, 1);
+                              }));
+            }
+        } catch (x) {
+            global.log(x);
+            throw x;
+        }
     },
 
     moveToLeft: function(indexOffset) {
@@ -150,6 +162,18 @@ SwitchActor.prototype = {
              time: 0.25,
              transition: 'easeOutQuad'
             });
+        try {
+            if (this.isWorkspace) {
+                global.log("test");
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  clone.set_scale(0.6 * 3 / 5, 0.6 * 3 / 5);
+                              }));
+            }
+        } catch (x) {
+            global.log(x);
+            throw x;
+        }
     },
 
     moveToRight: function(indexOffset) {
@@ -165,6 +189,19 @@ SwitchActor.prototype = {
              time: 0.25,
              transition: 'easeOutQuad'
             });
+        try {
+            if (this.isWorkspace) {
+                global.log("test");
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  clone.set_scale(0.6, 0.6);
+                              }));
+            }
+
+        } catch (x) {
+            global.log(x);
+            throw x;
+        }
     },
 
     getTitle: function() {
@@ -204,6 +241,8 @@ SwitchActor.prototype = {
         this.target_height = height * this.scale;
         this.target_width_side = width * this.scale * 0.6;
         this.target_height_side = height * this.scale * 0.6;
+        // this.target_width_side = width * this.scale * 1.0;
+        // this.target_height_side = height * this.scale * 1.0;
     },
 
     initActorClone: function() {
