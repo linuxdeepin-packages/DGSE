@@ -108,7 +108,7 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let appIconSize = 48;
     let appIconBoxSize = 56;
     let appIcon = app.create_icon_texture(appIconSize);
-    let appIconBox = new St.Bin( { style_class: 'thumbnail-app-icon-box'});
+    let appIconBox = new St.Bin( { style_class: 'alt-tab-app-icon-box'});
     let appIconCoordindate = {};
 	
     appIconCoordindate[appIconBox.toString()] = [
@@ -372,7 +372,7 @@ Switcher.prototype = {
 
         // background
         this.background = new St.Group(
-            {style_class: 'coverflow-switcher',
+            {style_class: 'alt-tab-switcher',
              visible: true,
              x: 0,
              y: 0,
@@ -381,7 +381,7 @@ Switcher.prototype = {
              height: monitor.height
             });
         this.background.add_actor(new St.Bin(
-                                      {style_class: 'coverflow-switcher-gradient',
+                                      {style_class: 'alt-tab-switcher-gradient',
                                        visible: true,
                                        x: 0,
                                        y: monitor.height / 2,
@@ -606,7 +606,7 @@ Switcher.prototype = {
                              });
         }
         this.windowTitle = new St.Label(
-            {style_class: 'coverflow-window-title-label',
+            {style_class: 'alt-tab-window-title-label',
              text: this.previews[this.currentIndex].getTitle(),
              opacity: 0
             });
