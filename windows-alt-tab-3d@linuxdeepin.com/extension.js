@@ -86,18 +86,42 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     return [workspaceClone, windowsCoordinates];
 }
 
-function getWindowClone(window, targetWidth, targetHeight, scale) {
+function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let compositor = window.get_compositor_private();
     let texture = compositor.get_texture();
 
-    let windowClone = new Clutter.Clone(
+    let windowClone = new Clutter.Group({clip_to_allocation: true});
+    windowClone.set_size(targetWidth, targetHeight);
+
+    // Add window clone.
+    let clone = new Clutter.Clone(
         {opacity: 255,
          source: texture,
-         x: compositor.x,
-         y: compositor.y
+         x: 0,
+         y: 0,
+         width: targetWidth,
+         height: targetHeight
         });
+    windowClone.add_actor(clone);
 
-    return windowClone;
+    // Add application icon.
+    let appIconSize = 48;
+    let appIconBoxSize = 56;
+    let appIcon = app.create_icon_texture(appIconSize);
+    let appIconBox = new St.Bin( { style_class: 'thumbnail-app-icon-box'});
+    let appIconCoordindate = {};
+	
+    appIconCoordindate[appIconBox.toString()] = [
+        targetWidth - appIconBoxSize,
+        targetHeight - appIconBoxSize];
+    appIcon.set_position(
+        targetWidth - appIconBoxSize,
+        targetHeight - appIconBoxSize
+    );
+	appIconBox.add_actor(appIcon);
+    windowClone.add_actor(appIconBox);
+
+    return [windowClone, appIconCoordindate];
 }
 
 function sortWindow(window1, window2) {
@@ -156,6 +180,15 @@ SwitchActor.prototype = {
                                       clone.set_scale(this.scale, this.scale);
                                   }
                               }));
+            } else {
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  if (this.cloneCoordinates[clone.toString()]) {
+                                      let [x, y] = this.cloneCoordinates[clone.toString()];
+                                      clone.set_position(x, y);
+                                  }
+                                  clone.set_scale(1, 1);
+                              }));
             }
         } catch (x) {
             global.log(x);
@@ -195,6 +228,15 @@ SwitchActor.prototype = {
                                       clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
                                   }
                               }));
+            } else {
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  if (this.cloneCoordinates[clone.toString()]) {
+                                      let [x, y] = this.cloneCoordinates[clone.toString()];
+                                      clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                  }
+                                  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+                              }));
             }
         } catch (x) {
             global.log(x);
@@ -233,8 +275,16 @@ SwitchActor.prototype = {
                                       clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
                                   }
                               }));
+            } else {
+                this.clone.get_children().forEach(
+                    Lang.bind(this, function(clone) {
+                                  if (this.cloneCoordinates[clone.toString()]) {
+                                      let [x, y] = this.cloneCoordinates[clone.toString()];
+                                      clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                  }
+                                  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+                              }));
             }
-
         } catch (x) {
             global.log(x);
             throw x;
@@ -289,12 +339,19 @@ SwitchActor.prototype = {
                 this.scale
             );
         } else {
-            this.clone = getWindowClone(
-                this.window,
-                this.target_width,
-                this.target_height,
-                this.scale
-            );
+            try {
+                [this.clone, this.cloneCoordinates] = getWindowClone(
+                    this.app,
+                    this.window,
+                    this.target_width,
+                    this.target_height,
+                    this.scale
+                );
+
+            } catch (x) {
+                global.log(x);
+                throw x;
+            }
         }
     }
 };
@@ -365,7 +422,7 @@ Switcher.prototype = {
 
             for (let wi in this.workspaceIndexes) {
                 let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
-				workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
+                workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
                 workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
