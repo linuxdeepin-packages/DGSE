@@ -12,7 +12,7 @@ const AltTab = imports.ui.altTab;
 const Tweener = imports.ui.tweener;
 
 let SWITCH_ACTOR_SCALE = 0.5;
-let SWITCH_ACTOR_SIDE_SCALE = 0.6;
+let SWITCH_ACTOR_SIDE_SCALE = 0.5;
 let switcher = null;
 let monitor = null;
 let _;
@@ -33,14 +33,11 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Create actor group.
     let workspaceClone = new Clutter.Group(
         {clip_to_allocation: true,
-         // rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
          reactive: false
         });
-    // workspaceClone.set_size(targetWidth, targetHeight);
 
     // Add background.
     let background = Meta.BackgroundActor.new_for_screen(global.screen);
-	global.log(background.toString());
 	background.set_scale(scale, scale);
     workspaceClone.add_actor(background);
 
@@ -101,7 +98,6 @@ function getWindowClone(window, targetWidth, targetHeight, scale) {
         {opacity: 255,
          source: texture,
          reactive: false,
-         // rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
          x: compositor.x,
          y: compositor.y
         });
@@ -136,6 +132,10 @@ SwitchActor.prototype = {
 
     moveToCenter: function() {
         this.clone.raise_top();
+		this.clone.rotation_center_y = new Clutter.Vertex(
+			{x: this.target_width / 2,// coordinate is relative to clone self
+			 y: 0.0,
+			 z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -143,15 +143,12 @@ SwitchActor.prototype = {
              y: (monitor.height - this.target_height) / 2,
              width: this.target_width,
              height: this.target_height,
-			 // rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
-			 // rotation_center_y: new Clutter.Vertex({ x: this.targetWidth / 2, y: 0.0, z: 0.0 }),
              rotation_angle_y: 0.0,
              time: 0.25,
              transition: 'easeOutQuad'
             });
         try {
             if (this.isWorkspace) {
-                global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
 								  if (getTypeString(clone) != "MetaBackgroundActor") {
@@ -173,6 +170,11 @@ SwitchActor.prototype = {
 
     moveToLeft: function(indexOffset) {
         this.clone.raise_top();
+		global.log(this.target_width_side);
+		this.clone.rotation_center_y = new Clutter.Vertex(
+			{x: this.target_width_side / 2, // coordinate is relative to clone self
+			 y: 0.0,
+			 z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -180,13 +182,12 @@ SwitchActor.prototype = {
              y: (monitor.height - this.target_height_side) / 2,
              width: this.target_width_side,
              height: this.target_height_side,
-             // rotation_angle_y: 60.0,
+             rotation_angle_y: 60.0,
              time: 0.25,
              transition: 'easeOutQuad'
             });
         try {
             if (this.isWorkspace) {
-                global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
 								  if (getTypeString(clone) != "MetaBackgroundActor") {
@@ -208,6 +209,10 @@ SwitchActor.prototype = {
 
     moveToRight: function(indexOffset) {
         this.clone.lower_bottom();
+		this.clone.rotation_center_y = new Clutter.Vertex(
+			{x: this.target_width_side / 2,// coordinate is relative to clone self
+			 y: 0.0,
+			 z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -215,13 +220,12 @@ SwitchActor.prototype = {
              y: (monitor.height - this.target_height_side) / 2,
              width: this.target_width_side,
              height: this.target_height_side,
-             // rotation_angle_y: -60.0,
+             rotation_angle_y: -60.0,
              time: 0.25,
              transition: 'easeOutQuad'
             });
         try {
             if (this.isWorkspace) {
-                global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
 								  if (getTypeString(clone) != "MetaBackgroundActor") {
