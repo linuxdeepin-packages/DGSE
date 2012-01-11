@@ -12,9 +12,18 @@ const AltTab = imports.ui.altTab;
 const Tweener = imports.ui.tweener;
 
 let SWITCH_ACTOR_SCALE = 0.5;
+let SWITCH_ACTOR_SIDE_SCALE = 0.6;
 let switcher = null;
 let monitor = null;
 let _;
+
+function getTypeString(object) {
+	try {
+		return object.toString().split(' ')[1].split(']')[0];
+	} catch (x) {
+		return '';
+	}
+}
 
 function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Get monitor size and scale value.
@@ -24,14 +33,15 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Create actor group.
     let workspaceClone = new Clutter.Group(
         {clip_to_allocation: true,
-         rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
+         // rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
          reactive: false
         });
-    workspaceClone.set_size(targetWidth, targetHeight);
+    // workspaceClone.set_size(targetWidth, targetHeight);
 
     // Add background.
     let background = Meta.BackgroundActor.new_for_screen(global.screen);
-    background.set_scale(scale, scale);
+	global.log(background.toString());
+	background.set_scale(scale, scale);
     workspaceClone.add_actor(background);
 
     // Add panel.
@@ -63,6 +73,7 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     workspaceWindows.sort(sortWindow);
 
     // Add workspace windows.
+	let windowsCoordinates = {};
     for (let ii in workspaceWindows) {
         let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
         let rect = workspaceWindows[ii].get_outer_rect();
@@ -74,11 +85,12 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
              width: rect.width * scale,
              height: rect.height * scale
             });
-
+	
+		windowsCoordinates[windowClone.toString()] = [rect.x * scale, rect.y * scale];
         workspaceClone.add_actor(windowClone);
     }
 
-    return workspaceClone;
+    return [workspaceClone, windowsCoordinates];
 }
 
 function getWindowClone(window, targetWidth, targetHeight, scale) {
@@ -89,7 +101,7 @@ function getWindowClone(window, targetWidth, targetHeight, scale) {
         {opacity: 255,
          source: texture,
          reactive: false,
-         rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
+         // rotation_center_y: new Clutter.Vertex({ x: targetWidth / 2, y: 0.0, z: 0.0 }),
          x: compositor.x,
          y: compositor.y
         });
@@ -131,6 +143,8 @@ SwitchActor.prototype = {
              y: (monitor.height - this.target_height) / 2,
              width: this.target_width,
              height: this.target_height,
+			 // rotation_center_y: new Clutter.Vertex({ x: this.target_width / 2, y: 0.0, z: 0.0 }),
+			 // rotation_center_y: new Clutter.Vertex({ x: this.targetWidth / 2, y: 0.0, z: 0.0 }),
              rotation_angle_y: 0.0,
              time: 0.25,
              transition: 'easeOutQuad'
@@ -140,7 +154,15 @@ SwitchActor.prototype = {
                 global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  clone.set_scale(1, 1);
+								  if (getTypeString(clone) != "MetaBackgroundActor") {
+									  if (this.cloneCoordinates[clone.toString()]) {
+										  let [x, y] = this.cloneCoordinates[clone.toString()];
+										  clone.set_position(x, y);
+									  }
+									  clone.set_scale(1, 1);
+								  } else {
+									  clone.set_scale(this.scale, this.scale);
+								  }
                               }));
             }
         } catch (x) {
@@ -153,12 +175,12 @@ SwitchActor.prototype = {
         this.clone.raise_top();
         Tweener.addTween(
             this.clone,
-            {opacity: 250,
-             x: monitor.width * 0.2 - (this.target_width_side * 2 / 5) / 2 + 25 * (indexOffset),
-             y: (monitor.height - this.target_height_side * 3 / 5) / 2,
-             width: this.target_width_side * 3 / 5,
-             height: this.target_height_side * 3 / 5,
-             rotation_angle_y: 60.0,
+            {opacity: 255,
+             x: monitor.width * 0.2 - (this.target_width_side) / 2,
+             y: (monitor.height - this.target_height_side) / 2,
+             width: this.target_width_side,
+             height: this.target_height_side,
+             // rotation_angle_y: 60.0,
              time: 0.25,
              transition: 'easeOutQuad'
             });
@@ -167,7 +189,15 @@ SwitchActor.prototype = {
                 global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  clone.set_scale(0.6 * 3 / 5, 0.6 * 3 / 5);
+								  if (getTypeString(clone) != "MetaBackgroundActor") {
+									  if (this.cloneCoordinates[clone.toString()]) {
+										  let [x, y] = this.cloneCoordinates[clone.toString()];
+										  clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+									  }
+									  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+								  } else {
+									  clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
+								  }
                               }));
             }
         } catch (x) {
@@ -180,12 +210,12 @@ SwitchActor.prototype = {
         this.clone.lower_bottom();
         Tweener.addTween(
             this.clone,
-            {opacity: 250,
-             x: monitor.width * 0.8 - this.target_width_side / 2 + 25 * (indexOffset),
+            {opacity: 255,
+             x: monitor.width * 0.8 - this.target_width_side / 2,
              y: (monitor.height - this.target_height_side) / 2,
              width: this.target_width_side,
              height: this.target_height_side,
-             rotation_angle_y: -60.0,
+             // rotation_angle_y: -60.0,
              time: 0.25,
              transition: 'easeOutQuad'
             });
@@ -194,7 +224,15 @@ SwitchActor.prototype = {
                 global.log("test");
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  clone.set_scale(0.6, 0.6);
+								  if (getTypeString(clone) != "MetaBackgroundActor") {
+									  if (this.cloneCoordinates[clone.toString()]) {
+										  let [x, y] = this.cloneCoordinates[clone.toString()];
+										  clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+									  }
+									  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+								  } else {
+									  clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
+								  }
                               }));
             }
 
@@ -239,15 +277,13 @@ SwitchActor.prototype = {
 
         this.target_width = width * this.scale;
         this.target_height = height * this.scale;
-        this.target_width_side = width * this.scale * 0.6;
-        this.target_height_side = height * this.scale * 0.6;
-        // this.target_width_side = width * this.scale * 1.0;
-        // this.target_height_side = height * this.scale * 1.0;
+        this.target_width_side = width * this.scale * SWITCH_ACTOR_SIDE_SCALE;
+        this.target_height_side = height * this.scale * SWITCH_ACTOR_SIDE_SCALE;
     },
 
     initActorClone: function() {
         if (this.isWorkspace) {
-            this.clone = getWorkspaceClone(
+            [this.clone, this.cloneCoordinates] = getWorkspaceClone(
                 this.window.get_workspace().index(),
                 this.target_width,
                 this.target_height,
@@ -329,7 +365,7 @@ Switcher.prototype = {
             this.workspaces = [];
 
             for (let wi in this.workspaceIndexes) {
-                let workspaceClone = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
+                let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
                 workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
