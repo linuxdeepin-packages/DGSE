@@ -240,18 +240,14 @@ Switcher.prototype = {
         // Add workspace previews.
         try {
             let monitor = Main.layoutManager.primaryMonitor;
-            let scale = 0.15;
-            let workspaceWidth = monitor.width * scale;
+			let workspacePaddingX = 15;
+			let workspacePaddingY = 30;
+			let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
+            let workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
+            let scale = workspaceWidth / monitor.width;
             let workspaceHeight = monitor.height * scale;
-            let workspacePaddingX = 15;
-            let workspacePaddingY = 30;
             let activeWorkspace = global.screen.get_active_workspace();
 
-            this.workspaceBox = new St.BoxLayout({visible: true,
-                                                  vertical: false});
-            this.workspaceScrollView = new St.ScrollView({x_fill: true,
-                                                          y_fill: true});
-            this.workspaceScrollView.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
             this.workspaceLayer = new St.BoxLayout({visible: true,
                                                     vertical: false});
             this.workspaces = [];
@@ -270,10 +266,7 @@ Switcher.prototype = {
                 this.workspaces.push(workspaceCloneBin);
             }
 
-            this.workspaceScrollView.add_actor(this.workspaceLayer);
-            this.workspaceBox.add_actor(this.workspaceScrollView);
-
-            this.workspaceBox.set_position(
+            this.workspaceLayer.set_position(
                 (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
                 monitor.height - workspaceHeight - workspacePaddingY);
 
@@ -289,7 +282,7 @@ Switcher.prototype = {
             }
 
             this.actor.add_actor(this.previewLayer);
-            this.actor.add_actor(this.workspaceBox);
+            this.actor.add_actor(this.workspaceLayer);
         } catch (x) {
             global.log(x);
             throw x;
