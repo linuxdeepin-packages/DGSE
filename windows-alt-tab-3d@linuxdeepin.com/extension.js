@@ -13,11 +13,11 @@ const Tweener = imports.ui.tweener;
 
 let SWITCH_ACTOR_SCALE = 0.5;
 let switcher = null;
+let monitor = null;
 let _;
 
 function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Get monitor size and scale value.
-    let monitor = Main.layoutManager.primaryMonitor;
     let width = monitor.width;
     let height = monitor.height;
 
@@ -82,7 +82,6 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
 }
 
 function getWindowClone(window, targetWidth, targetHeight, scale) {
-    let monitor = Main.layoutManager.primaryMonitor;
     let compositor = window.get_compositor_private();
     let texture = compositor.get_texture();
 
@@ -123,6 +122,51 @@ SwitchActor.prototype = {
         this.initActorClone();
     },
 
+    moveToCenter: function() {
+        this.clone.raise_top();
+        Tweener.addTween(
+            this.clone,
+            {opacity: 255,
+             x: (monitor.width - this.target_width) / 2,
+             y: (monitor.height - this.target_height) / 2,
+             width: this.target_width,
+             height: this.target_height,
+             rotation_angle_y: 0.0,
+             time: 0.25,
+             transition: 'easeOutQuad'
+            });
+    },
+
+    moveToLeft: function(indexOffset) {
+        this.clone.raise_top();
+        Tweener.addTween(
+            this.clone,
+            {opacity: 250,
+             x: monitor.width * 0.2 - (this.target_width_side * 2 / 5) / 2 + 25 * (indexOffset),
+             y: (monitor.height - this.target_height_side * 3 / 5) / 2,
+             width: this.target_width_side * 3 / 5,
+             height: this.target_height_side * 3 / 5,
+             rotation_angle_y: 60.0,
+             time: 0.25,
+             transition: 'easeOutQuad'
+            });
+    },
+
+    moveToRight: function(indexOffset) {
+        this.clone.lower_bottom();
+        Tweener.addTween(
+            this.clone,
+            {opacity: 250,
+             x: monitor.width * 0.8 - this.target_width_side / 2 + 25 * (indexOffset),
+             y: (monitor.height - this.target_height_side) / 2,
+             width: this.target_width_side,
+             height: this.target_height_side,
+             rotation_angle_y: -60.0,
+             time: 0.25,
+             transition: 'easeOutQuad'
+            });
+    },
+
     getTitle: function() {
         if (this.isWorkspace) {
             let workspaceIndex = this.window.get_workspace().index() + 1;
@@ -133,38 +177,33 @@ SwitchActor.prototype = {
     },
 
     initActorSize: function() {
+        let width = 0;
+        let height = 0;
         if (this.isWorkspace) {
-            let monitor = Main.layoutManager.primaryMonitor;
-            let width = monitor.width;
-            let height = monitor.height;
+            width = monitor.width;
+            height = monitor.height;
 
             this.scale = 1.0;
             if (width > monitor.width * SWITCH_ACTOR_SCALE ||
                 height > monitor.height * SWITCH_ACTOR_SCALE) {
                 this.scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
             }
-
-            this.target_width = width * this.scale;
-            this.target_height = height * this.scale;
-            this.target_width_side = width * this.scale * 0.5;
-            this.target_height_side = height * this.scale * 0.7;
         } else {
-            let monitor = Main.layoutManager.primaryMonitor;
             let compositor = this.window.get_compositor_private();
             let texture = compositor.get_texture();
-            let [width, height] = texture.get_size();
+            [width, height] = texture.get_size();
 
             this.scale = 1.0;
             if (width > monitor.width * SWITCH_ACTOR_SCALE ||
                 height > monitor.height * SWITCH_ACTOR_SCALE) {
                 this.scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
             }
-
-            this.target_width = width * this.scale;
-            this.target_height = height * this.scale;
-            this.target_width_side = width * this.scale * 0.5;
-            this.target_height_side = height * this.scale * 0.7;
         }
+
+        this.target_width = width * this.scale;
+        this.target_height = height * this.scale;
+        this.target_width_side = width * this.scale * 0.6;
+        this.target_height_side = height * this.scale * 0.6;
     },
 
     initActorClone: function() {
@@ -197,7 +236,6 @@ Switcher.prototype = {
         this.currentIndex = 0;
         this.haveModal = false;
 
-        let monitor = Main.layoutManager.primaryMonitor;
         this.actor = new St.Group({ visible: true,
                                     reactive: true});
 
@@ -239,10 +277,9 @@ Switcher.prototype = {
 
         // Add workspace previews.
         try {
-            let monitor = Main.layoutManager.primaryMonitor;
-			let workspacePaddingX = 15;
-			let workspacePaddingY = 30;
-			let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
+            let workspacePaddingX = 15;
+            let workspacePaddingY = 30;
+            let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
             let workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
             let scale = workspaceWidth / monitor.width;
             let workspaceHeight = monitor.height * scale;
@@ -427,8 +464,6 @@ Switcher.prototype = {
     },
 
     updateCoverflow: function() {
-        let monitor = Main.layoutManager.primaryMonitor;
-
         // window title label
         if (this.windowTitle) {
             Tweener.addTween(this.windowTitle, {
@@ -439,12 +474,10 @@ Switcher.prototype = {
                              });
         }
         this.windowTitle = new St.Label(
-            {style_class: 'modal-dialog',
+            {style_class: 'coverflow-window-title-label',
              text: this.previews[this.currentIndex].getTitle(),
              opacity: 0
             });
-        this.windowTitle.add_style_class_name('run-dialog');
-        this.windowTitle.add_style_class_name('coverflow-window-title-label');
         this.background.add_actor(this.windowTitle);
         this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
         this.windowTitle.y = monitor.height / 6;
@@ -459,44 +492,11 @@ Switcher.prototype = {
             let preview = this.previews[i];
 
             if (i == this.currentIndex) {
-                preview.clone.raise_top();
-                Tweener.addTween(
-                    preview.clone,
-                    {opacity: 255,
-                     x: (monitor.width - preview.target_width) / 2,
-                     y: (monitor.height - preview.target_height) / 2,
-                     width: preview.target_width,
-                     height: preview.target_height,
-                     rotation_angle_y: 0.0,
-                     time: 0.25,
-                     transition: 'easeOutQuad'
-                    });
+                preview.moveToCenter();
             } else if (i < this.currentIndex) {
-                preview.clone.raise_top();
-                Tweener.addTween(
-                    preview.clone,
-                    {opacity: 250,
-                     x: monitor.width * 0.2 - (preview.target_width_side * 2 / 5) / 2 + 25 * (i - this.currentIndex),
-                     y: (monitor.height - preview.target_height_side * 3 / 5) / 2,
-                     width: preview.target_width_side * 3 / 5,
-                     height: preview.target_height_side * 3 / 5,
-                     rotation_angle_y: 60.0,
-                     time: 0.25,
-                     transition: 'easeOutQuad'
-                    });
+                preview.moveToLeft(i - this.currentIndex);
             } else if (i > this.currentIndex) {
-                preview.clone.lower_bottom();
-                Tweener.addTween(
-                    preview.clone,
-                    {opacity: 250,
-                     x: monitor.width * 0.8 - preview.target_width_side / 2 + 25 * (i - this.currentIndex),
-                     y: (monitor.height - preview.target_height_side) / 2,
-                     width: preview.target_width_side,
-                     height: preview.target_height_side,
-                     rotation_angle_y: -60.0,
-                     time: 0.25,
-                     transition: 'easeOutQuad'
-                    });
+                preview.moveToRight(i - this.currentIndex);
             }
         }
     },
@@ -572,8 +572,6 @@ Switcher.prototype = {
     },
 
     onDestroy: function() {
-        let monitor = Main.layoutManager.primaryMonitor;
-
         // preview windows
         for (let i in this.previews) {
             let preview = this.previews[i];
@@ -639,8 +637,8 @@ function startWindowSwitcher(shellwm, binding, mask, window, backwards) {
 }
 
 function init(extensionMeta) {
-    let localePath = extensionMeta.path + '/locale';
-    Gettext.bindtextdomain('alt-tab', localePath);
+    monitor = Main.layoutManager.primaryMonitor;
+    Gettext.bindtextdomain('alt-tab', extensionMeta.path + '/locale');
     _ = Gettext.domain('alt-tab').gettext;
 }
 
