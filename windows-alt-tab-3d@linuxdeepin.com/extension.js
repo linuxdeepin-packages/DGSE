@@ -18,11 +18,11 @@ let monitor = null;
 let _;
 
 function getTypeString(object) {
-	try {
-		return object.toString().split(' ')[1].split(']')[0];
-	} catch (x) {
-		return '';
-	}
+    try {
+        return object.toString().split(' ')[1].split(']')[0];
+    } catch (x) {
+        return '';
+    }
 }
 
 function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
@@ -31,21 +31,18 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     let height = monitor.height;
 
     // Create actor group.
-    let workspaceClone = new Clutter.Group(
-        {clip_to_allocation: true,
-         reactive: false
-        });
+    let workspaceClone = new Clutter.Group({clip_to_allocation: true});
+    workspaceClone.set_size(targetWidth, targetHeight);
 
     // Add background.
     let background = Meta.BackgroundActor.new_for_screen(global.screen);
-	background.set_scale(scale, scale);
+    background.set_scale(scale, scale);
     workspaceClone.add_actor(background);
 
     // Add panel.
     let [panelWidth, panelHeight] = Main.panel.actor.get_size();
     let panel = new Clutter.Clone(
         {source: Main.panel.actor,
-         reactive: false,
          x: 0,
          y: 0,
          width: panelWidth * scale,
@@ -70,20 +67,19 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     workspaceWindows.sort(sortWindow);
 
     // Add workspace windows.
-	let windowsCoordinates = {};
+    let windowsCoordinates = {};
     for (let ii in workspaceWindows) {
         let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
         let rect = workspaceWindows[ii].get_outer_rect();
         let windowClone = new Clutter.Clone(
             {source: windowTexture,
-             reactive: false,
              x: rect.x * scale,
              y: rect.y * scale,
              width: rect.width * scale,
              height: rect.height * scale
             });
-	
-		windowsCoordinates[windowClone.toString()] = [rect.x * scale, rect.y * scale];
+
+        windowsCoordinates[windowClone.toString()] = [rect.x * scale, rect.y * scale];
         workspaceClone.add_actor(windowClone);
     }
 
@@ -97,7 +93,6 @@ function getWindowClone(window, targetWidth, targetHeight, scale) {
     let windowClone = new Clutter.Clone(
         {opacity: 255,
          source: texture,
-         reactive: false,
          x: compositor.x,
          y: compositor.y
         });
@@ -132,10 +127,10 @@ SwitchActor.prototype = {
 
     moveToCenter: function() {
         this.clone.raise_top();
-		this.clone.rotation_center_y = new Clutter.Vertex(
-			{x: this.target_width / 2,// coordinate is relative to clone self
-			 y: 0.0,
-			 z: 0.0 });
+        this.clone.rotation_center_y = new Clutter.Vertex(
+            {x: this.target_width / 2,// coordinate is relative to clone self
+             y: 0.0,
+             z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -151,15 +146,15 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-								  if (getTypeString(clone) != "MetaBackgroundActor") {
-									  if (this.cloneCoordinates[clone.toString()]) {
-										  let [x, y] = this.cloneCoordinates[clone.toString()];
-										  clone.set_position(x, y);
-									  }
-									  clone.set_scale(1, 1);
-								  } else {
-									  clone.set_scale(this.scale, this.scale);
-								  }
+                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x, y);
+                                      }
+                                      clone.set_scale(1, 1);
+                                  } else {
+                                      clone.set_scale(this.scale, this.scale);
+                                  }
                               }));
             }
         } catch (x) {
@@ -170,11 +165,11 @@ SwitchActor.prototype = {
 
     moveToLeft: function(indexOffset) {
         this.clone.raise_top();
-		global.log(this.target_width_side);
-		this.clone.rotation_center_y = new Clutter.Vertex(
-			{x: this.target_width_side / 2, // coordinate is relative to clone self
-			 y: 0.0,
-			 z: 0.0 });
+        global.log(this.target_width_side);
+        this.clone.rotation_center_y = new Clutter.Vertex(
+            {x: this.target_width_side / 2, // coordinate is relative to clone self
+             y: 0.0,
+             z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -190,15 +185,15 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-								  if (getTypeString(clone) != "MetaBackgroundActor") {
-									  if (this.cloneCoordinates[clone.toString()]) {
-										  let [x, y] = this.cloneCoordinates[clone.toString()];
-										  clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
-									  }
-									  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
-								  } else {
-									  clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
-								  }
+                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                      }
+                                      clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+                                  } else {
+                                      clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
+                                  }
                               }));
             }
         } catch (x) {
@@ -209,10 +204,10 @@ SwitchActor.prototype = {
 
     moveToRight: function(indexOffset) {
         this.clone.lower_bottom();
-		this.clone.rotation_center_y = new Clutter.Vertex(
-			{x: this.target_width_side / 2,// coordinate is relative to clone self
-			 y: 0.0,
-			 z: 0.0 });
+        this.clone.rotation_center_y = new Clutter.Vertex(
+            {x: this.target_width_side / 2,// coordinate is relative to clone self
+             y: 0.0,
+             z: 0.0 });
         Tweener.addTween(
             this.clone,
             {opacity: 255,
@@ -228,15 +223,15 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-								  if (getTypeString(clone) != "MetaBackgroundActor") {
-									  if (this.cloneCoordinates[clone.toString()]) {
-										  let [x, y] = this.cloneCoordinates[clone.toString()];
-										  clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
-									  }
-									  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
-								  } else {
-									  clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
-								  }
+                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                      }
+                                      clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+                                  } else {
+                                      clone.set_scale(this.scale * SWITCH_ACTOR_SIDE_SCALE, this.scale * SWITCH_ACTOR_SIDE_SCALE);
+                                  }
                               }));
             }
 
@@ -370,6 +365,7 @@ Switcher.prototype = {
 
             for (let wi in this.workspaceIndexes) {
                 let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
+				workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
                 workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
