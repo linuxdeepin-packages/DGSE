@@ -2,9 +2,15 @@
 	background-color: rgba(0, 0, 0, 0.5);
 }
 
-.alt-tab-switcher-gradient {
-	background-gradient-start: rgba(255, 255, 255, 0.0);
-	background-gradient-end: rgba(255, 255, 255, 0.9);
+.alt-tab-switcher-gradient-top {
+	background-gradient-start: rgba(0, 0, 0, 0);
+	background-gradient-end: rgba(255, 255, 255, 0.8999999999999);
+	background-gradient-direction: vertical;
+}
+
+.alt-tab-switcher-gradient-bottom {
+	background-gradient-start: rgba(255, 255, 255, 0.9);
+	background-gradient-end: rgba(255, 255, 255, 1);
 	background-gradient-direction: vertical;
 }
 

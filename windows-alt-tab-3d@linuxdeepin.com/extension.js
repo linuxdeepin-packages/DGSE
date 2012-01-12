@@ -380,12 +380,20 @@ Switcher.prototype = {
              height: monitor.height
             });
         this.background.add_actor(new St.Bin(
-                                      {style_class: 'alt-tab-switcher-gradient',
+                                      {style_class: 'alt-tab-switcher-gradient-top',
                                        visible: true,
                                        x: 0,
-                                       y: monitor.height / 2,
+                                       y: 0,
                                        width: monitor.width,
-                                       height: monitor.height / 2
+                                       height: monitor.height * 9 / 10
+                                      }));
+        this.background.add_actor(new St.Bin(
+                                      {style_class: 'alt-tab-switcher-gradient-bottom',
+                                       visible: true,
+                                       x: 0,
+                                       y: monitor.height * 9 / 10,
+                                       width: monitor.width,
+                                       height: monitor.height
                                       }));
         this.actor.add_actor(this.background);
 
