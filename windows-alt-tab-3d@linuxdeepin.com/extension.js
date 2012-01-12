@@ -148,6 +148,7 @@ SwitchActor.prototype = {
     },
 
     moveToCenter: function() {
+		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
         this.clone.rotation_center_y = new Clutter.Vertex(
             {x: this.target_width / 2,// coordinate is relative to clone self
@@ -157,7 +158,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: (monitor.width - this.target_width) / 2,
-             y: (monitor.height - this.target_height) / 2,
+             y: panelHeight + monitor.height / 8,
              width: this.target_width,
              height: this.target_height,
              rotation_angle_y: 0.0,
@@ -195,6 +196,7 @@ SwitchActor.prototype = {
     },
 
     moveToLeft: function(indexOffset) {
+		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
         global.log(this.target_width_side);
         this.clone.rotation_center_y = new Clutter.Vertex(
@@ -205,7 +207,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: monitor.width * 0.2 - (this.target_width_side) / 2,
-             y: (monitor.height - this.target_height_side) / 2,
+			 y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: 60.0,
@@ -243,6 +245,7 @@ SwitchActor.prototype = {
     },
 
     moveToRight: function(indexOffset) {
+		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.lower_bottom();
         this.clone.rotation_center_y = new Clutter.Vertex(
             {x: this.target_width_side / 2,// coordinate is relative to clone self
@@ -252,7 +255,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: monitor.width * 0.8 - this.target_width_side / 2,
-             y: (monitor.height - this.target_height_side) / 2,
+			 y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: -60.0,
@@ -398,8 +401,7 @@ Switcher.prototype = {
         this.actor.add_actor(this.background);
 
         // create previews
-        this.previewLayer = new St.Group({ visible: true,
-										   clip_to_allocation: true});
+        this.previewLayer = new St.Group({ visible: true});
         this.previews = [];
 
         [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
@@ -621,7 +623,7 @@ Switcher.prototype = {
         this.background.add_actor(this.windowTitle);
 		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
-        this.windowTitle.y = panelHeight + monitor.height / 40;
+        this.windowTitle.y = panelHeight + monitor.height / 20;
         Tweener.addTween(this.windowTitle, {
                              opacity: 255,
                              time: 0.25,
@@ -639,6 +641,13 @@ Switcher.prototype = {
             } else if (i > this.currentIndex) {
                 preview.moveToRight(i - this.currentIndex);
             }
+			
+			// Just show left, center, right.
+			if (Math.abs(i - this.currentIndex) <= 1) {
+				preview.clone.show_all();
+			} else {
+				preview.clone.hide_all();
+			}
         }
     },
 
