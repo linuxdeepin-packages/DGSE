@@ -419,7 +419,8 @@ Switcher.prototype = {
         // Add workspace previews.
         try {
             let workspacePaddingX = 16;
-            let workspacePaddingY = 72;
+            let workspacePaddingTop = 72;
+            let workspacePaddingBottom = 64;
             let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
             let workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
             let scale = workspaceWidth / monitor.width;
@@ -437,7 +438,7 @@ Switcher.prototype = {
                 workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
                     workspaceWidth + workspacePaddingX * 2,
-                    workspaceHeight + workspacePaddingY * 2
+                    workspaceHeight + workspacePaddingTop + workspacePaddingBottom
                 );
                 workspaceCloneBin.child = workspaceClone;
                 this.workspaceLayer.add(workspaceCloneBin);
@@ -447,7 +448,7 @@ Switcher.prototype = {
 
             this.workspaceLayer.set_position(
                 (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
-                monitor.height - workspaceHeight - workspacePaddingY);
+                monitor.height - workspaceHeight - workspacePaddingBottom);
 
             for (let wl in this.workspaces) {
                 Tweener.addTween(
