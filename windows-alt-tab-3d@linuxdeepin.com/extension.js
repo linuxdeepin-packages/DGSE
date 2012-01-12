@@ -89,6 +89,7 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
 function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let compositor = window.get_compositor_private();
     let texture = compositor.get_texture();
+    let [windowWidth, windowHeight] = texture.get_size();
 
     let windowClone = new Clutter.Group({clip_to_allocation: true});
     windowClone.set_size(targetWidth, targetHeight);
@@ -110,14 +111,11 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let appIcon = app.create_icon_texture(appIconSize);
     let appIconBox = new St.Bin( { style_class: 'alt-tab-app-icon-box'});
     let appIconCoordindate = {};
+	let appIconX = windowWidth * scale - appIconBoxSize;
+	let appIconY = windowHeight * scale - appIconBoxSize;
 	
-    appIconCoordindate[appIconBox.toString()] = [
-        targetWidth - appIconBoxSize,
-        targetHeight - appIconBoxSize];
-    appIcon.set_position(
-        targetWidth - appIconBoxSize,
-        targetHeight - appIconBoxSize
-    );
+    appIconCoordindate[appIconBox.toString()] = [appIconX, appIconY];
+    appIcon.set_position(appIconX, appIconY);
 	appIconBox.add_actor(appIcon);
     windowClone.add_actor(appIconBox);
 
@@ -368,7 +366,8 @@ Switcher.prototype = {
         this.haveModal = false;
 
         this.actor = new St.Group({ visible: true,
-                                    reactive: true});
+                                    reactive: true,
+									clip_to_allocation: true});
 
         // background
         this.background = new St.Group(
@@ -391,7 +390,8 @@ Switcher.prototype = {
         this.actor.add_actor(this.background);
 
         // create previews
-        this.previewLayer = new St.Group({ visible: true });
+        this.previewLayer = new St.Group({ visible: true,
+										   clip_to_allocation: true});
         this.previews = [];
 
         [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
@@ -405,11 +405,11 @@ Switcher.prototype = {
             this.previews.push(this.switchWorkspaces[s]);
             this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
-
+		
         // Add workspace previews.
         try {
-            let workspacePaddingX = 15;
-            let workspacePaddingY = 30;
+            let workspacePaddingX = 16;
+            let workspacePaddingY = 72;
             let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
             let workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
             let scale = workspaceWidth / monitor.width;
@@ -611,8 +611,9 @@ Switcher.prototype = {
              opacity: 0
             });
         this.background.add_actor(this.windowTitle);
+		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
-        this.windowTitle.y = monitor.height / 6;
+        this.windowTitle.y = panelHeight + monitor.height / 40;
         Tweener.addTween(this.windowTitle, {
                              opacity: 255,
                              time: 0.25,
