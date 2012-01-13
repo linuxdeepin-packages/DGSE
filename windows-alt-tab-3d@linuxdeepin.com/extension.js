@@ -22,6 +22,12 @@ let workspacePaddingBottom = 64;
 let workspaceWidth = null;
 let workspaceHeight = null;
 let workspaceNum = 0;
+let workspaceIndicatorOffsetX = 0;
+let workspaceIndicatorOffsetY = 0;
+let workspaceIndicatorWidth = 170;
+let workspaceIndicatorHeight = 118;
+let workspaceIndicatorInnerWidth = 150.91;
+let workspaceIndicatorInnerHeight = 97.25;
 let _;
 
 function getTypeString(object) {
@@ -154,11 +160,11 @@ SwitchActor.prototype = {
         this.initActorClone();
     },
 
-	initPosition: function() {
+    initPosition: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-		this.clone.set_position((monitor.width - this.target_width) / 2, panelHeight + monitor.height / 8);
-	},
-	
+        this.clone.set_position((monitor.width - this.target_width) / 2, panelHeight + monitor.height / 8);
+    },
+
     moveToCenter: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
@@ -422,13 +428,13 @@ Switcher.prototype = {
         [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
 
         for (let w in this.switchWindows) {
-			this.switchWindows[w].initPosition();
+            this.switchWindows[w].initPosition();
             this.previews.push(this.switchWindows[w]);
             this.previewLayer.add_actor(this.switchWindows[w].clone);
         }
 
         for (let s in this.switchWorkspaces) {
-			this.switchWorkspaces[s].initPosition();
+            this.switchWorkspaces[s].initPosition();
             this.previews.push(this.switchWorkspaces[s]);
             this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
@@ -445,8 +451,6 @@ Switcher.prototype = {
             this.workspaceLayer = new St.BoxLayout({visible: true,
                                                     vertical: false});
             this.workspaces = [];
-
-            workspaceIndicator = new St.Bin({ style_class: 'alt-tab-workspace-indicator' });
 
             for (let wi = 0; wi < this.workspaceIndexes.length; wi++) {
                 let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
@@ -494,10 +498,17 @@ Switcher.prototype = {
                 monitor.height - workspaceHeight - workspacePaddingBottom
             );
 
-            workspaceIndicator.set_size(workspaceWidth, workspaceHeight);
+            workspaceIndicatorOffsetX = ((workspaceIndicatorWidth - workspaceIndicatorInnerWidth) * workspaceWidth / workspaceIndicatorInnerWidth) / 2;
+            workspaceIndicatorOffsetY = ((workspaceIndicatorHeight - workspaceIndicatorInnerHeight) * workspaceHeight / workspaceIndicatorInnerHeight) / 2;
+            workspaceIndicator = new St.Bin({ style_class: 'alt-tab-workspace-indicator' });
+            workspaceIndicator.set_size(workspaceIndicatorWidth, workspaceIndicatorHeight);
+            workspaceIndicator.set_scale(
+                workspaceWidth / workspaceIndicatorInnerWidth,
+                workspaceHeight / workspaceIndicatorInnerHeight
+            );
             workspaceIndicator.set_position(
-                (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
-                monitor.height - workspaceHeight - workspacePaddingBottom
+                (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX - workspaceIndicatorOffsetX,
+                monitor.height - workspaceHeight - workspacePaddingBottom - workspaceIndicatorOffsetY
             );
             workspaceIndicator.set_opacity(0);
 
@@ -719,9 +730,9 @@ Switcher.prototype = {
         // Move workspace indicator.
         Tweener.addTween(
             workspaceIndicator,
-            {x: (monitor.width - (workspaceWidth + workspacePaddingX * 2) * workspaceNum) / 2 + workspacePaddingX + this.previews[this.currentIndex].getWorkspaceIndex() * (workspaceWidth + workspacePaddingX * 2),
-             y: monitor.height - workspaceHeight - workspacePaddingBottom,
-             time: 0.25,
+            {x: (monitor.width - (workspaceWidth + workspacePaddingX * 2) * workspaceNum) / 2 + workspacePaddingX + this.previews[this.currentIndex].getWorkspaceIndex() * (workspaceWidth + workspacePaddingX * 2) - workspaceIndicatorOffsetX,
+             y: monitor.height - workspaceHeight - workspacePaddingBottom - workspaceIndicatorOffsetY,
+             time: 0.3,
              transition: 'easeOutQuad'
             }
         );

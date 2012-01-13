@@ -1,32 +1,32 @@
 .alt-tab-switcher {
-	background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .alt-tab-switcher-gradient-top {
-	background-gradient-start: rgba(0, 0, 0, 0);
-	background-gradient-end: rgba(255, 255, 255, 0.8999999999999);
-	background-gradient-direction: vertical;
+    background-gradient-start: rgba(0, 0, 0, 0);
+    background-gradient-end: rgba(255, 255, 255, 0.8999999999999);
+    background-gradient-direction: vertical;
 }
 
 .alt-tab-switcher-gradient-bottom {
-	background-gradient-start: rgba(255, 255, 255, 0.9);
-	background-gradient-end: rgba(255, 255, 255, 1);
-	background-gradient-direction: vertical;
+    background-gradient-start: rgba(255, 255, 255, 0.9);
+    background-gradient-end: rgba(255, 255, 255, 1);
+    background-gradient-direction: vertical;
 }
 
 .alt-tab-window-title-label {
-	font-weight: bold;
-	color: rgba(255,255,255,0.8);
-	font-size: 24px;
-	text-shadow: rgba(255,255,255,0.3) 0px 1px 0px;
+    font-weight: bold;
+    color: rgba(255,255,255,0.8);
+    font-size: 24px;
+    text-shadow: rgba(255,255,255,0.3) 0px 1px 0px;
 }
 
 .alt-tab-workspace-title-label {
-	color: rgba(0,0,0,0.8);
-	font-size: 18px;
-	text-shadow: rgba(0,0,0,0.3) 0px 1px 0px;
-	text-align: center;
-	padding: 20px 20px 20px 20px;
+    color: rgba(0,0,0,0.8);
+    font-size: 18px;
+    text-shadow: rgba(0,0,0,0.3) 0px 1px 0px;
+    text-align: center;
+    padding: 20px 20px 20px 20px;
 }
 
 .alt-tab-app-icon-box {
@@ -38,8 +38,10 @@
 }
 
 .alt-tab-workspace-indicator {
-	outline: 3px solid rgba(146,248,253,0.89);
-    box-shadow: inset 0px 1px 0px 0px rgba(255,255,255,0.7);
-    border-radius: 4px;
+	background-image: url("light.svg");
+}
+
+.alt-tab-preview-indicator {
+	background-image: url("light.svg");
 }
 
