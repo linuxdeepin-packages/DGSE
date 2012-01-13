@@ -15,19 +15,26 @@ const Tweener = imports.ui.tweener;
 let SWITCH_ACTOR_SCALE = 0.5;
 let SWITCH_ACTOR_SIDE_SCALE = 0.5;
 let monitor = null;
-let workspaceIndicator = null;
 let workspacePaddingX = 16;
 let workspacePaddingTop = 72;
 let workspacePaddingBottom = 64;
 let workspaceWidth = null;
 let workspaceHeight = null;
 let workspaceNum = 0;
+
+let workspaceIndicator = null;
 let workspaceIndicatorOffsetX = 0;
 let workspaceIndicatorOffsetY = 0;
 let workspaceIndicatorWidth = 170;
 let workspaceIndicatorHeight = 118;
 let workspaceIndicatorInnerWidth = 150.91;
 let workspaceIndicatorInnerHeight = 97.25;
+
+let previewIndicatorWidth = 170;
+let previewIndicatorHeight = 118;
+let previewIndicatorInnerWidth = 150.91;
+let previewIndicatorInnerHeight = 97.25;
+
 let _;
 
 function getTypeString(object) {
@@ -187,7 +194,9 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(this.previewIndicatorScaleX, this.previewIndicatorScaleY);
+                                  } else if (getTypeString(clone) != "MetaBackgroundActor") {
                                       if (this.cloneCoordinates[clone.toString()]) {
                                           let [x, y] = this.cloneCoordinates[clone.toString()];
                                           clone.set_position(x, y);
@@ -200,11 +209,15 @@ SwitchActor.prototype = {
             } else {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (this.cloneCoordinates[clone.toString()]) {
-                                      let [x, y] = this.cloneCoordinates[clone.toString()];
-                                      clone.set_position(x, y);
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(this.previewIndicatorScaleX, this.previewIndicatorScaleY);
+                                  } else {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x, y);
+                                      }
+                                      clone.set_scale(1, 1);
                                   }
-                                  clone.set_scale(1, 1);
                               }));
             }
         } catch (x) {
@@ -235,7 +248,11 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(
+                                          this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
+                                          this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
+                                  } else if (getTypeString(clone) != "MetaBackgroundActor") {
                                       if (this.cloneCoordinates[clone.toString()]) {
                                           let [x, y] = this.cloneCoordinates[clone.toString()];
                                           clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
@@ -248,11 +265,17 @@ SwitchActor.prototype = {
             } else {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (this.cloneCoordinates[clone.toString()]) {
-                                      let [x, y] = this.cloneCoordinates[clone.toString()];
-                                      clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(
+                                          this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
+                                          this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
+                                  } else {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                      }
+                                      clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
                                   }
-                                  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
                               }));
             }
         } catch (x) {
@@ -283,7 +306,11 @@ SwitchActor.prototype = {
             if (this.isWorkspace) {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (getTypeString(clone) != "MetaBackgroundActor") {
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(
+                                          this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
+                                          this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
+                                  } else if (getTypeString(clone) != "MetaBackgroundActor") {
                                       if (this.cloneCoordinates[clone.toString()]) {
                                           let [x, y] = this.cloneCoordinates[clone.toString()];
                                           clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
@@ -296,11 +323,17 @@ SwitchActor.prototype = {
             } else {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
-                                  if (this.cloneCoordinates[clone.toString()]) {
-                                      let [x, y] = this.cloneCoordinates[clone.toString()];
-                                      clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                  if (clone == this.previewIndicator) {
+                                      clone.set_scale(
+                                          this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
+                                          this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
+                                  } else {
+                                      if (this.cloneCoordinates[clone.toString()]) {
+                                          let [x, y] = this.cloneCoordinates[clone.toString()];
+                                          clone.set_position(x * SWITCH_ACTOR_SIDE_SCALE, y * SWITCH_ACTOR_SIDE_SCALE);
+                                          clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
+                                      }
                                   }
-                                  clone.set_scale(SWITCH_ACTOR_SIDE_SCALE, SWITCH_ACTOR_SIDE_SCALE);
                               }));
             }
         } catch (x) {
@@ -361,20 +394,25 @@ SwitchActor.prototype = {
                 this.scale
             );
         } else {
-            try {
-                [this.clone, this.cloneCoordinates] = getWindowClone(
-                    this.app,
-                    this.window,
-                    this.target_width,
-                    this.target_height,
-                    this.scale
-                );
-
-            } catch (x) {
-                global.log(x);
-                throw x;
-            }
+            [this.clone, this.cloneCoordinates] = getWindowClone(
+                this.app,
+                this.window,
+                this.target_width,
+                this.target_height,
+                this.scale
+            );
         }
+
+        this.previewIndicator = new St.Bin({ style_class: 'alt-tab-preview-indicator' });
+        this.previewIndicatorScaleX = this.target_width / previewIndicatorInnerWidth;
+        this.previewIndicatorScaleY = this.target_height / previewIndicatorInnerHeight;
+        this.previewIndicator.set_size(previewIndicatorWidth, previewIndicatorHeight);
+        this.previewIndicator.set_scale(
+            this.previewIndicatorScaleX,
+            this.previewIndicatorScaleY
+        );
+        this.previewIndicator.set_position(0, 0);
+        this.clone.add_actor(this.previewIndicator);
     }
 };
 
@@ -425,22 +463,22 @@ Switcher.prototype = {
         this.previewLayer = new St.Group({ visible: true});
         this.previews = [];
 
-        [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
-
-        for (let w in this.switchWindows) {
-            this.switchWindows[w].initPosition();
-            this.previews.push(this.switchWindows[w]);
-            this.previewLayer.add_actor(this.switchWindows[w].clone);
-        }
-
-        for (let s in this.switchWorkspaces) {
-            this.switchWorkspaces[s].initPosition();
-            this.previews.push(this.switchWorkspaces[s]);
-            this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
-        }
-
         // Add workspace previews.
         try {
+            [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
+
+            for (let w in this.switchWindows) {
+                this.switchWindows[w].initPosition();
+                this.previews.push(this.switchWindows[w]);
+                this.previewLayer.add_actor(this.switchWindows[w].clone);
+            }
+
+            for (let s in this.switchWorkspaces) {
+                this.switchWorkspaces[s].initPosition();
+                this.previews.push(this.switchWorkspaces[s]);
+                this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
+            }
+
             workspaceNum = this.workspaceIndexes.length;
             let workspaceMaxWidth = monitor.width / 6 - workspacePaddingX * 2;
             workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
@@ -453,7 +491,7 @@ Switcher.prototype = {
             this.workspaces = [];
 
             for (let wi = 0; wi < this.workspaceIndexes.length; wi++) {
-                let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
+                let [workspaceClone, workspaceCoordinates] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
                 workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
                 workspaceCloneBin.set_size(
@@ -694,7 +732,6 @@ Switcher.prototype = {
              opacity: 0
             });
         if (this.windowTitle) {
-            global.log(getTypeString(this.windowTitle));
             this.background.add_actor(this.windowTitle);
             let [panelWidth, panelHeight] = Main.panel.actor.get_size();
             this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
