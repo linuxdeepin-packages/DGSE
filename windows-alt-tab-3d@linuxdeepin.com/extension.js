@@ -154,6 +154,11 @@ SwitchActor.prototype = {
         this.initActorClone();
     },
 
+	initPosition: function() {
+        let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+		this.clone.set_position((monitor.width - this.target_width) / 2, panelHeight + monitor.height / 8);
+	},
+	
     moveToCenter: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
@@ -417,11 +422,13 @@ Switcher.prototype = {
         [this.switchWindows, this.switchWorkspaces] = this.getSwitchActors();
 
         for (let w in this.switchWindows) {
+			this.switchWindows[w].initPosition();
             this.previews.push(this.switchWindows[w]);
             this.previewLayer.add_actor(this.switchWindows[w].clone);
         }
 
         for (let s in this.switchWorkspaces) {
+			this.switchWorkspaces[s].initPosition();
             this.previews.push(this.switchWorkspaces[s]);
             this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
