@@ -7,14 +7,21 @@ const Clutter = imports.gi.Clutter;
 const St = imports.gi.St;
 const Meta = imports.gi.Meta;
 const Shell = imports.gi.Shell;
+const Lightbox = imports.ui.lightbox;
 
 const AltTab = imports.ui.altTab;
 const Tweener = imports.ui.tweener;
 
 let SWITCH_ACTOR_SCALE = 0.5;
 let SWITCH_ACTOR_SIDE_SCALE = 0.5;
-let switcher = null;
 let monitor = null;
+let workspaceIndicator = null;
+let workspacePaddingX = 16;
+let workspacePaddingTop = 72;
+let workspacePaddingBottom = 64;
+let workspaceWidth = null;
+let workspaceHeight = null;
+let workspaceNum = 0;
 let _;
 
 function getTypeString(object) {
@@ -111,12 +118,12 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let appIcon = app.create_icon_texture(appIconSize);
     let appIconBox = new St.Bin( { style_class: 'alt-tab-app-icon-box'});
     let appIconCoordindate = {};
-	let appIconX = windowWidth * scale - appIconBoxSize;
-	let appIconY = windowHeight * scale - appIconBoxSize;
-	
+    let appIconX = windowWidth * scale - appIconBoxSize;
+    let appIconY = windowHeight * scale - appIconBoxSize;
+
     appIconCoordindate[appIconBox.toString()] = [appIconX, appIconY];
     appIcon.set_position(appIconX, appIconY);
-	appIconBox.add_actor(appIcon);
+    appIconBox.add_actor(appIcon);
     windowClone.add_actor(appIconBox);
 
     return [windowClone, appIconCoordindate];
@@ -148,7 +155,7 @@ SwitchActor.prototype = {
     },
 
     moveToCenter: function() {
-		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+        let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
         this.clone.rotation_center_y = new Clutter.Vertex(
             {x: this.target_width / 2,// coordinate is relative to clone self
@@ -196,9 +203,8 @@ SwitchActor.prototype = {
     },
 
     moveToLeft: function(indexOffset) {
-		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+        let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.raise_top();
-        global.log(this.target_width_side);
         this.clone.rotation_center_y = new Clutter.Vertex(
             {x: this.target_width_side / 2, // coordinate is relative to clone self
              y: 0.0,
@@ -207,7 +213,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: monitor.width * 0.2 - (this.target_width_side) / 2,
-			 y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: 60.0,
@@ -245,7 +251,7 @@ SwitchActor.prototype = {
     },
 
     moveToRight: function(indexOffset) {
-		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+        let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.lower_bottom();
         this.clone.rotation_center_y = new Clutter.Vertex(
             {x: this.target_width_side / 2,// coordinate is relative to clone self
@@ -255,7 +261,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: monitor.width * 0.8 - this.target_width_side / 2,
-			 y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: -60.0,
@@ -299,6 +305,10 @@ SwitchActor.prototype = {
         } else {
             return this.window.get_title();
         }
+    },
+
+    getWorkspaceIndex: function() {
+        return this.window.get_workspace().index();
     },
 
     initActorSize: function() {
@@ -370,7 +380,7 @@ Switcher.prototype = {
 
         this.actor = new St.Group({ visible: true,
                                     reactive: true,
-									clip_to_allocation: true});
+                                    clip_to_allocation: true});
 
         // background
         this.background = new St.Group(
@@ -415,40 +425,74 @@ Switcher.prototype = {
             this.previews.push(this.switchWorkspaces[s]);
             this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
         }
-		
+
         // Add workspace previews.
         try {
-            let workspacePaddingX = 16;
-            let workspacePaddingTop = 72;
-            let workspacePaddingBottom = 64;
-            let workspaceMaxWidth = monitor.width / 5 - workspacePaddingX * 2;
-            let workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
+            workspaceNum = this.workspaceIndexes.length;
+            let workspaceMaxWidth = monitor.width / 6 - workspacePaddingX * 2;
+            workspaceWidth = Math.min(monitor.width / this.workspaceIndexes.length - workspacePaddingX * 2, workspaceMaxWidth);
             let scale = workspaceWidth / monitor.width;
-            let workspaceHeight = monitor.height * scale;
+            workspaceHeight = monitor.height * scale;
             let activeWorkspace = global.screen.get_active_workspace();
 
             this.workspaceLayer = new St.BoxLayout({visible: true,
                                                     vertical: false});
             this.workspaces = [];
 
-            for (let wi in this.workspaceIndexes) {
+            workspaceIndicator = new St.Bin({ style_class: 'alt-tab-workspace-indicator' });
+
+            for (let wi = 0; wi < this.workspaceIndexes.length; wi++) {
                 let [workspaceClone, _] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
                 workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
-                workspaceCloneBin.set_opacity(0);
                 workspaceCloneBin.set_size(
                     workspaceWidth + workspacePaddingX * 2,
                     workspaceHeight + workspacePaddingTop + workspacePaddingBottom
                 );
                 workspaceCloneBin.child = workspaceClone;
-                this.workspaceLayer.add(workspaceCloneBin);
 
-                this.workspaces.push(workspaceCloneBin);
+                let workspaceTitle;
+                let workspaceIndex = wi + 1;
+                if (wi == this.workspaceIndexes.length - 1) {
+                    workspaceTitle = "New Workspace";
+                } else {
+                    workspaceTitle = "Workspace " + workspaceIndex;
+                }
+                let workspaceTitleLabel = new St.Label(
+                    {style_class: 'alt-tab-workspace-title-label',
+                     text: workspaceTitle
+                    });
+                workspaceTitleLabel.set_size(workspaceWidth, -1);
+                let workspaceTitleBin = new St.Bin({ x_align: St.Align.START });
+                workspaceTitleBin.add_actor(workspaceTitleLabel);
+
+                let workspaceBoxLayout = new St.BoxLayout(
+                    {vertical: true});
+                // workspaceBoxLayout.add(workspaceTitleBin, {x_fill: true,
+                //                                         y_fill: false,
+                //                                         expand: false,
+                //                                         y_align: St.Align.START});
+                workspaceBoxLayout.add(workspaceCloneBin, {x_fill: false,
+                                                           y_fill: false,
+                                                           expand: false,
+                                                           y_align: St.Align.START});
+                workspaceBoxLayout.set_opacity(0);
+
+                this.workspaceLayer.add(workspaceBoxLayout);
+                this.workspaces.push(workspaceBoxLayout);
             }
 
             this.workspaceLayer.set_position(
                 (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
-                monitor.height - workspaceHeight - workspacePaddingBottom);
+                monitor.height - workspaceHeight - workspacePaddingBottom
+            );
+
+            workspaceIndicator.set_size(workspaceWidth, workspaceHeight);
+            workspaceIndicator.set_position(
+                (monitor.width - (workspaceWidth + workspacePaddingX * 2) * this.workspaceIndexes.length) / 2 + workspacePaddingX,
+                monitor.height - workspaceHeight - workspacePaddingBottom
+            );
+            workspaceIndicator.set_opacity(0);
 
             for (let wl in this.workspaces) {
                 Tweener.addTween(
@@ -461,8 +505,18 @@ Switcher.prototype = {
                 );
             }
 
+            Tweener.addTween(
+                workspaceIndicator,
+                {
+                    opacity: 255,
+                    time: 1,
+                    transition: 'easeOutQuad'
+                }
+            );
+
             this.actor.add_actor(this.previewLayer);
             this.actor.add_actor(this.workspaceLayer);
+            this.actor.add_actor(workspaceIndicator);
         } catch (x) {
             global.log(x);
             throw x;
@@ -621,15 +675,18 @@ Switcher.prototype = {
              text: this.previews[this.currentIndex].getTitle(),
              opacity: 0
             });
-        this.background.add_actor(this.windowTitle);
-		let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
-        this.windowTitle.y = panelHeight + monitor.height / 20;
-        Tweener.addTween(this.windowTitle, {
-                             opacity: 255,
-                             time: 0.25,
-                             transition: 'easeOutQuad'
-                         });
+        if (this.windowTitle) {
+            global.log(getTypeString(this.windowTitle));
+            this.background.add_actor(this.windowTitle);
+            let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+            this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
+            this.windowTitle.y = panelHeight + monitor.height / 20;
+            Tweener.addTween(this.windowTitle, {
+                                 opacity: 255,
+                                 time: 0.25,
+                                 transition: 'easeOutQuad'
+                             });
+        }
 
         // preview windows
         for (let i in this.previews) {
@@ -642,14 +699,25 @@ Switcher.prototype = {
             } else if (i > this.currentIndex) {
                 preview.moveToRight(i - this.currentIndex);
             }
-			
-			// Just show left, center, right.
-			if (Math.abs(i - this.currentIndex) <= 1) {
-				preview.clone.show_all();
-			} else {
-				preview.clone.hide_all();
-			}
+
+
+            // Just show left, center, right.
+            if (Math.abs(i - this.currentIndex) <= 1) {
+                preview.clone.show_all();
+            } else {
+                preview.clone.hide_all();
+            }
         }
+
+        // Move workspace indicator.
+        Tweener.addTween(
+            workspaceIndicator,
+            {x: (monitor.width - (workspaceWidth + workspacePaddingX * 2) * workspaceNum) / 2 + workspacePaddingX + this.previews[this.currentIndex].getWorkspaceIndex() * (workspaceWidth + workspacePaddingX * 2),
+             y: monitor.height - workspaceHeight - workspacePaddingBottom,
+             time: 0.25,
+             transition: 'easeOutQuad'
+            }
+        );
     },
 
     keyPressEvent: function(actor, event) {
@@ -764,6 +832,15 @@ Switcher.prototype = {
             );
         }
 
+        Tweener.addTween(
+            workspaceIndicator,
+            {
+                opacity: 0,
+                time: 0.25,
+                transition: 'easeOutQuad'
+            }
+        );
+
         if (this.haveModal) {
             Main.popModal(this.actor);
             this.haveModal = false;
@@ -779,18 +856,19 @@ Switcher.prototype = {
     }
 };
 
+function init(extensionMeta) {
+    monitor = Main.layoutManager.primaryMonitor;
+    let localePath = extensionMeta.path + '/locale';
+    Gettext.bindtextdomain('alt-tab-3d', localePath);
+    _ = Gettext.domain('alt-tab-3d').gettext;
+}
+
 function startWindowSwitcher(shellwm, binding, mask, window, backwards) {
-    switcher = new Switcher();
+    let switcher = new Switcher();
 
     if (!switcher.show(shellwm, binding, mask, window, backwards)) {
         switcher.destroy();
     }
-}
-
-function init(extensionMeta) {
-    monitor = Main.layoutManager.primaryMonitor;
-    Gettext.bindtextdomain('alt-tab', extensionMeta.path + '/locale');
-    _ = Gettext.domain('alt-tab').gettext;
 }
 
 function enable() {
