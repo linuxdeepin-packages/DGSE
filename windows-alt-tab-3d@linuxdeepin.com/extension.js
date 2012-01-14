@@ -45,6 +45,37 @@ function getTypeString(object) {
     }
 }
 
+function getDesktopClone(blurBackground) {
+    // Get monitor size and scale value.
+    let width = monitor.width;
+    let height = monitor.height;
+
+    // Create actor group.
+    let desktopClone = new Clutter.Group({clip_to_allocation: true});
+    desktopClone.set_size(width, height);
+
+    // Add background.
+    let background = Meta.BackgroundActor.new_for_screen(global.screen);
+	if (blurBackground) {
+		background.add_effect(new Clutter.BlurEffect());
+	}
+    desktopClone.add_actor(background);
+
+    // Add panel.
+    let [panelWidth, panelHeight] = Main.panel.actor.get_size();
+    let panel = new Clutter.Clone(
+        {source: Main.panel.actor,
+         x: 0,
+         y: 0,
+         width: panelWidth,
+         height: panelHeight
+        }
+    );
+    desktopClone.add_actor(panel);
+	
+	return desktopClone;
+}
+
 function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Get monitor size and scale value.
     let width = monitor.width;
@@ -457,6 +488,8 @@ Switcher.prototype = {
              width: monitor.width,
              height: monitor.height
             });
+		let desktopClone = getDesktopClone(true);
+		this.background.add_actor(desktopClone);
         this.background.add_actor(new St.Bin(
                                       {style_class: 'alt-tab-switcher-gradient-top',
                                        visible: true,
