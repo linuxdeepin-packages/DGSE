@@ -193,6 +193,7 @@ SwitchActor.prototype = {
         this.window = window;
         let activeWorkspace = global.screen.get_active_workspace();
         this.isWorkspace = !(window.get_workspace() == activeWorkspace);
+		this.offsetX = monitor.width / 25;
 
         this.initActorSize();
         this.initActorClone();
@@ -200,7 +201,10 @@ SwitchActor.prototype = {
 
     initPosition: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        this.clone.set_position((monitor.width - this.target_width) / 2, panelHeight + monitor.height / 8);
+        this.clone.set_position(
+			(monitor.width - this.target_width) / 2, 
+			panelHeight + monitor.height / 8
+		);
     },
 
     moveToCenter: function() {
@@ -214,7 +218,8 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: (monitor.width - this.target_width) / 2,
-             y: panelHeight + monitor.height / 8,
+             // y: panelHeight + monitor.height / 8,
+             y: monitor.height / 2 - this.target_height / 2 - 50,
              width: this.target_width,
              height: this.target_height,
              rotation_angle_y: 0.0,
@@ -269,8 +274,9 @@ SwitchActor.prototype = {
         Tweener.addTween(
             this.clone,
             {opacity: 255,
-             x: monitor.width * 0.2 - (this.target_width_side) / 2,
-             y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             x: monitor.width * 0.3 - (this.target_width_side) / 2 + this.offsetX * indexOffset,
+             // y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             y: monitor.height / 2 - this.target_height_side / 2,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: 60.0,
@@ -333,8 +339,9 @@ SwitchActor.prototype = {
         Tweener.addTween(
             this.clone,
             {opacity: 255,
-             x: monitor.width * 0.8 - this.target_width_side / 2,
-             y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             x: monitor.width * 0.7 - this.target_width_side / 2 + this.offsetX * indexOffset,
+             // y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             y: monitor.height / 2 - this.target_height_side / 2,
              width: this.target_width_side,
              height: this.target_height_side,
              rotation_angle_y: -60.0,
@@ -806,11 +813,11 @@ Switcher.prototype = {
 
 
             // Just show left, center, right.
-            if (Math.abs(i - this.currentIndex) <= 1) {
-                preview.clone.show_all();
-            } else {
-                preview.clone.hide_all();
-            }
+            // if (Math.abs(i - this.currentIndex) <= 1) {
+            //     preview.clone.show_all();
+            // } else {
+            //     preview.clone.hide_all();
+            // }
         }
 
         // Move workspace indicator.
