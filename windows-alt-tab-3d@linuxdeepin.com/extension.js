@@ -194,6 +194,7 @@ SwitchActor.prototype = {
         let activeWorkspace = global.screen.get_active_workspace();
         this.isWorkspace = !(window.get_workspace() == activeWorkspace);
 		this.offsetX = monitor.width / 25;
+		this.offsetY = monitor.height / 15;
 
         this.initActorSize();
         this.initActorClone();
@@ -218,8 +219,7 @@ SwitchActor.prototype = {
             this.clone,
             {opacity: 255,
              x: (monitor.width - this.target_width) / 2,
-             // y: panelHeight + monitor.height / 8,
-             y: monitor.height / 2 - this.target_height / 2 - 50,
+             y: monitor.height / 2 - this.target_height / 2 - this.offsetY,
              width: this.target_width,
              height: this.target_height,
              rotation_angle_y: 0.0,
@@ -274,8 +274,7 @@ SwitchActor.prototype = {
         Tweener.addTween(
             this.clone,
             {opacity: 255,
-             x: monitor.width * 0.3 - (this.target_width_side) / 2 + this.offsetX * indexOffset,
-             // y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             x: monitor.width * 0.2 - this.offsetX * indexOffset,
              y: monitor.height / 2 - this.target_height_side / 2,
              width: this.target_width_side,
              height: this.target_height_side,
@@ -339,8 +338,7 @@ SwitchActor.prototype = {
         Tweener.addTween(
             this.clone,
             {opacity: 255,
-             x: monitor.width * 0.7 - this.target_width_side / 2 + this.offsetX * indexOffset,
-             // y: panelHeight + monitor.height / 8 + this.target_height_side * 7 / 9,
+             x: monitor.width * 0.8 + this.offsetX * indexOffset - this.target_width_side,
              y: monitor.height / 2 - this.target_height_side / 2,
              width: this.target_width_side,
              height: this.target_height_side,
@@ -802,18 +800,18 @@ Switcher.prototype = {
         // preview windows
         for (let i in this.previews) {
             let preview = this.previews[i];
+			let indexOffset = Math.abs(i - this.currentIndex);
 
-            if (i == this.currentIndex) {
+            if (indexOffset == 0) {
                 preview.moveToCenter();
             } else if (i < this.currentIndex) {
-                preview.moveToLeft(i - this.currentIndex);
+                preview.moveToLeft(indexOffset);
             } else if (i > this.currentIndex) {
-                preview.moveToRight(i - this.currentIndex);
+                preview.moveToRight(indexOffset);
             }
 
-
             // Just show left, center, right.
-            // if (Math.abs(i - this.currentIndex) <= 1) {
+            // if (indexOffset <= 1) {
             //     preview.clone.show_all();
             // } else {
             //     preview.clone.hide_all();
