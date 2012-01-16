@@ -39,7 +39,7 @@ let _;
 
 function getTypeString(object) {
     try {
-        return object.toString().split(' ')[1].split(']')[0];
+        return object.toString().split(' ')[1].split(']')[0].split(".")[0];
     } catch (x) {
         return '';
     }
@@ -785,7 +785,7 @@ Switcher.prototype = {
              text: this.previews[this.currentIndex].getTitle(),
              opacity: 0
             });
-        if (this.windowTitle) {
+        if (this.windowTitle && getTypeString(this.windowTitle) == "StLabel") {
             this.background.add_actor(this.windowTitle);
             let [panelWidth, panelHeight] = Main.panel.actor.get_size();
             this.windowTitle.x = (monitor.width - this.windowTitle.width) / 2;
