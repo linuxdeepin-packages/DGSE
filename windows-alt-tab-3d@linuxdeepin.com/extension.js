@@ -37,6 +37,24 @@ let previewIndicatorInnerHeight = 97.25;
 
 let _;
 
+function getInvisibleBorderPadding(metaWindow) {
+    // We need to adjust the position of the actor because of the
+    // consequences of invisible borders -- in reality, the texture
+    // has an extra set of "padding" around it that we need to trim
+    // down.
+
+    // The outer rect paradoxically is the smaller rectangle,
+    // containing the positions of the visible frame. The input
+    // rect contains everything, including the invisible border
+    // padding.
+    let outerRect = metaWindow.get_outer_rect();
+    let inputRect = metaWindow.get_input_rect();
+    let [borderX, borderY] = [inputRect.x - outerRect.x,
+                              inputRect.y - outerRect.y];
+
+    return [borderX, borderY];
+}
+
 function getTypeString(object) {
     try {
         return object.toString().split(' ')[1].split(']')[0].split(".")[0];
@@ -51,14 +69,15 @@ function getDesktopClone(blurBackground) {
     let height = monitor.height;
 
     // Create actor group.
-    let desktopClone = new Clutter.Group({clip_to_allocation: true});
+    let desktopClone = new St.Group({clip_to_allocation: true,
+                                     style_class: 'alt-tab-switch-actor-indicator'});
     desktopClone.set_size(width, height);
 
     // Add background.
     let background = Meta.BackgroundActor.new_for_screen(global.screen);
-	if (blurBackground) {
-		background.add_effect(new Clutter.BlurEffect());
-	}
+    if (blurBackground) {
+        background.add_effect(new Clutter.BlurEffect());
+    }
     desktopClone.add_actor(background);
 
     // Add panel.
@@ -72,8 +91,8 @@ function getDesktopClone(blurBackground) {
         }
     );
     desktopClone.add_actor(panel);
-	
-	return desktopClone;
+
+    return desktopClone;
 }
 
 function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
@@ -82,7 +101,8 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     let height = monitor.height;
 
     // Create actor group.
-    let workspaceClone = new Clutter.Group({clip_to_allocation: true});
+    let workspaceClone = new St.Group({clip_to_allocation: true,
+                                       style_class: 'alt-tab-switch-actor-indicator'});
     workspaceClone.set_size(targetWidth, targetHeight);
 
     // Add background.
@@ -138,37 +158,47 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
 }
 
 function getWindowClone(app, window, targetWidth, targetHeight, scale) {
-    let compositor = window.get_compositor_private();
-    let texture = compositor.get_texture();
-    let [windowWidth, windowHeight] = texture.get_size();
+    let realWindow = window.get_compositor_private();
+	let metaWindow = realWindow.meta_window;
+    let texture = realWindow.get_texture();
+	let [borderX, borderY] = getInvisibleBorderPadding(metaWindow);
+	let origX = window.x - borderX;
+	let origY = window.y - borderY;
+	let outerRect = metaWindow.get_outer_rect();
 
-    let windowClone = new Clutter.Group({clip_to_allocation: true});
+    let windowClone = new St.Group(
+		{clip_to_allocation: true,
+		 // x: origX,
+		 // y: origY,
+		 width: (outerRect.width - borderX * 2) * scale,
+		 height: (outerRect.height - borderY * 2) * scale,
+		 // width: outerRect.width,
+		 // height: outerRect.height,
+         style_class: 'alt-tab-switch-actor-indicator'});
     windowClone.set_size(targetWidth, targetHeight);
 
     // Add window clone.
     let clone = new Clutter.Clone(
         {opacity: 255,
          source: texture,
-         x: 0,
-         y: 0,
-         width: targetWidth,
-         height: targetHeight
+         x: borderX * scale,
+         y: borderY * scale,
+		 width: (outerRect.width - borderX * 2) * scale,
+		 height: (outerRect.height - borderY * 2) * scale
         });
     windowClone.add_actor(clone);
+    let appIconCoordindate = {};
+	appIconCoordindate[clone.toString()] = [borderX * scale, borderY * scale];
 
     // Add application icon.
     let appIconSize = 48;
-    let appIconBoxSize = 56;
     let appIcon = app.create_icon_texture(appIconSize);
-    let appIconBox = new St.Bin( { style_class: 'alt-tab-app-icon-box'});
-    let appIconCoordindate = {};
-    let appIconX = windowWidth * scale - appIconBoxSize;
-    let appIconY = windowHeight * scale - appIconBoxSize;
+    let appIconX = targetWidth - appIconSize;
+    let appIconY = targetHeight - appIconSize;
 
-    appIconCoordindate[appIconBox.toString()] = [appIconX, appIconY];
+    appIconCoordindate[appIcon.toString()] = [appIconX, appIconY];
     appIcon.set_position(appIconX, appIconY);
-    appIconBox.add_actor(appIcon);
-    windowClone.add_actor(appIconBox);
+    windowClone.add_actor(appIcon);
 
     return [windowClone, appIconCoordindate];
 }
@@ -193,8 +223,8 @@ SwitchActor.prototype = {
         this.window = window;
         let activeWorkspace = global.screen.get_active_workspace();
         this.isWorkspace = !(window.get_workspace() == activeWorkspace);
-		this.offsetX = monitor.width / 25;
-		this.offsetY = monitor.height / 15;
+        this.offsetX = monitor.width / 25;
+        this.offsetY = monitor.height / 15;
 
         this.initActorSize();
         this.initActorClone();
@@ -203,9 +233,9 @@ SwitchActor.prototype = {
     initPosition: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.set_position(
-			(monitor.width - this.target_width) / 2, 
-			panelHeight + monitor.height / 8
-		);
+            (monitor.width - this.target_width) / 2,
+            panelHeight + monitor.height / 8
+        );
     },
 
     moveToCenter: function() {
@@ -231,7 +261,7 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(-this.previewIndicatorOffsetX, -this.previewIndicatorOffsetY);
+                                      clone.set_position(-this.previewIndicatorOffsetX, -this.previewIndicatorOffsetY);
                                       clone.set_scale(this.previewIndicatorScaleX, this.previewIndicatorScaleY);
                                   } else if (getTypeString(clone) != "MetaBackgroundActor") {
                                       if (this.cloneCoordinates[clone.toString()]) {
@@ -247,7 +277,7 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(-this.previewIndicatorOffsetX, -this.previewIndicatorOffsetY);
+                                      clone.set_position(-this.previewIndicatorOffsetX, -this.previewIndicatorOffsetY);
                                       clone.set_scale(this.previewIndicatorScaleX, this.previewIndicatorScaleY);
                                   } else {
                                       if (this.cloneCoordinates[clone.toString()]) {
@@ -287,9 +317,9 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(
-											  -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE, 
-											  -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
+                                      clone.set_position(
+                                              -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE,
+                                              -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
                                       clone.set_scale(
                                           this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
                                           this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
@@ -307,9 +337,9 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(
-											  -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE, 
-											  -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
+                                      clone.set_position(
+                                              -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE,
+                                              -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
                                       clone.set_scale(
                                           this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
                                           this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
@@ -351,9 +381,9 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(
-											  -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE, 
-											  -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
+                                      clone.set_position(
+                                              -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE,
+                                              -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
                                       clone.set_scale(
                                           this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
                                           this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
@@ -371,9 +401,9 @@ SwitchActor.prototype = {
                 this.clone.get_children().forEach(
                     Lang.bind(this, function(clone) {
                                   if (clone == this.previewIndicator) {
-									  clone.set_position(
-											  -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE, 
-											  -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
+                                      clone.set_position(
+                                              -this.previewIndicatorOffsetX * SWITCH_ACTOR_SIDE_SCALE,
+                                              -this.previewIndicatorOffsetY * SWITCH_ACTOR_SIDE_SCALE);
                                       clone.set_scale(
                                           this.previewIndicatorScaleX * SWITCH_ACTOR_SIDE_SCALE,
                                           this.previewIndicatorScaleY * SWITCH_ACTOR_SIDE_SCALE);
@@ -418,9 +448,9 @@ SwitchActor.prototype = {
                 this.scale = Math.min(monitor.width * SWITCH_ACTOR_SCALE / width, monitor.height * SWITCH_ACTOR_SCALE / height);
             }
         } else {
-            let compositor = this.window.get_compositor_private();
-            let texture = compositor.get_texture();
-            [width, height] = texture.get_size();
+            let rect = this.window.get_outer_rect();
+            width = rect.width;
+            height = rect.height;
 
             this.scale = 1.0;
             if (width > monitor.width * SWITCH_ACTOR_SCALE ||
@@ -456,15 +486,15 @@ SwitchActor.prototype = {
         this.previewIndicator = new St.Bin({ style_class: 'alt-tab-preview-indicator' });
         this.previewIndicatorScaleX = this.target_width / previewIndicatorInnerWidth;
         this.previewIndicatorScaleY = this.target_height / previewIndicatorInnerHeight;
-		this.previewIndicatorOffsetX = this.previewIndicatorScaleX * (previewIndicatorWidth - previewIndicatorInnerWidth) / 2;
-		this.previewIndicatorOffsetY = this.previewIndicatorScaleY * (previewIndicatorHeight - previewIndicatorInnerHeight) / 2;
+        this.previewIndicatorOffsetX = this.previewIndicatorScaleX * (previewIndicatorWidth - previewIndicatorInnerWidth) / 2;
+        this.previewIndicatorOffsetY = this.previewIndicatorScaleY * (previewIndicatorHeight - previewIndicatorInnerHeight) / 2;
         this.previewIndicator.set_size(previewIndicatorWidth, previewIndicatorHeight);
         this.previewIndicator.set_scale(
             this.previewIndicatorScaleX,
             this.previewIndicatorScaleY
         );
         this.previewIndicator.set_position(-this.previewIndicatorOffsetX, -this.previewIndicatorOffsetY);
-        this.clone.add_actor(this.previewIndicator);
+        // this.clone.add_actor(this.previewIndicator);
     }
 };
 
@@ -493,8 +523,8 @@ Switcher.prototype = {
              width: monitor.width,
              height: monitor.height
             });
-		let desktopClone = getDesktopClone(true);
-		this.background.add_actor(desktopClone);
+        let desktopClone = getDesktopClone(true);
+        this.background.add_actor(desktopClone);
         this.background.add_actor(new St.Bin(
                                       {style_class: 'alt-tab-switcher-gradient-top',
                                        visible: true,
@@ -800,7 +830,7 @@ Switcher.prototype = {
         // preview windows
         for (let i in this.previews) {
             let preview = this.previews[i];
-			let indexOffset = Math.abs(i - this.currentIndex);
+            let indexOffset = Math.abs(i - this.currentIndex);
 
             if (indexOffset == 0) {
                 preview.moveToCenter();

@@ -29,12 +29,13 @@
     padding: 20px 20px 20px 20px;
 }
 
-.alt-tab-app-icon-box {
-    width: 56px;
-    height: 56px;
-    background: rgba(0,0,0,0.8);
-    border: 1px solid rgba(128,128,128,0.40);
-    border-radius: 10px;
+.alt-tab-switch-actor-indicator {
+	background-gradient-direction: vertical;
+	background-gradient-start: rgba(0,0,0,0.6);
+	background-gradient-end: rgba(0,0,0,0.4);
+	border: 1px solid rgba(125,125,125,0.2);
+	box-shadow:  inset 0px -1px 0px 0px rgba(255,255,255,0.2);
+    padding: 1px 0px 0px 1px;
 }
 
 .alt-tab-workspace-indicator {
