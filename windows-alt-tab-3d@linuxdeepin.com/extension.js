@@ -49,10 +49,9 @@ function getInvisibleBorderPadding(metaWindow) {
     // padding.
     let outerRect = metaWindow.get_outer_rect();
     let inputRect = metaWindow.get_input_rect();
-    let [borderX, borderY] = [inputRect.x - outerRect.x,
-                              inputRect.y - outerRect.y];
-
-    return [borderX, borderY];
+	
+    return [inputRect.x - outerRect.x,
+            inputRect.y - outerRect.y];
 }
 
 function getTypeString(object) {
@@ -101,8 +100,7 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     let height = monitor.height;
 
     // Create actor group.
-    let workspaceClone = new St.Group({clip_to_allocation: true,
-                                       style_class: 'alt-tab-switch-actor-indicator'});
+    let workspaceClone = new St.Group({clip_to_allocation: true});
     workspaceClone.set_size(targetWidth, targetHeight);
 
     // Add background.
@@ -140,17 +138,25 @@ function getWorkspaceClone(workspaceIndex, targetWidth, targetHeight, scale) {
     // Add workspace windows.
     let windowsCoordinates = {};
     for (let ii in workspaceWindows) {
-        let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
-        let rect = workspaceWindows[ii].get_outer_rect();
-        let windowClone = new Clutter.Clone(
-            {source: windowTexture,
-             x: rect.x * scale,
-             y: rect.y * scale,
-             width: rect.width * scale,
-             height: rect.height * scale
-            });
-
-        windowsCoordinates[windowClone.toString()] = [rect.x * scale, rect.y * scale];
+		let realWindow = workspaceWindows[ii].get_compositor_private();
+		let metaWindow = realWindow.meta_window;
+		let windowTexture = realWindow.get_texture();
+		let outerRect = metaWindow.get_outer_rect();
+		let [borderX, borderY] = getInvisibleBorderPadding(metaWindow);
+		let windowX = (outerRect.x + borderX) * scale;
+		let windowY = (outerRect.y + borderY) * scale;
+		let windowWidth = (outerRect.width - borderX * 2) * scale;
+		let windowHeight = (outerRect.height - borderY * 2) * scale;
+		
+		let windowClone = new Clutter.Clone(
+			{source: windowTexture,
+			 x: windowX,
+			 y: windowY,
+			 width: windowWidth,
+			 height: windowHeight
+			}
+		);
+		windowsCoordinates[windowClone.toString()] = [windowX, windowY];
         workspaceClone.add_actor(windowClone);
     }
 
@@ -162,19 +168,11 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
 	let metaWindow = realWindow.meta_window;
     let texture = realWindow.get_texture();
 	let [borderX, borderY] = getInvisibleBorderPadding(metaWindow);
-	let origX = window.x - borderX;
-	let origY = window.y - borderY;
 	let outerRect = metaWindow.get_outer_rect();
+    let appIconCoordindate = {};
 
     let windowClone = new St.Group(
-		{clip_to_allocation: true,
-		 // x: origX,
-		 // y: origY,
-		 width: (outerRect.width - borderX * 2) * scale,
-		 height: (outerRect.height - borderY * 2) * scale,
-		 // width: outerRect.width,
-		 // height: outerRect.height,
-         style_class: 'alt-tab-switch-actor-indicator'});
+		{clip_to_allocation: true});
     windowClone.set_size(targetWidth, targetHeight);
 
     // Add window clone.
@@ -187,7 +185,6 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
 		 height: (outerRect.height - borderY * 2) * scale
         });
     windowClone.add_actor(clone);
-    let appIconCoordindate = {};
 	appIconCoordindate[clone.toString()] = [borderX * scale, borderY * scale];
 
     // Add application icon.
@@ -196,10 +193,10 @@ function getWindowClone(app, window, targetWidth, targetHeight, scale) {
     let appIconX = targetWidth - appIconSize;
     let appIconY = targetHeight - appIconSize;
 
-    appIconCoordindate[appIcon.toString()] = [appIconX, appIconY];
     appIcon.set_position(appIconX, appIconY);
+    appIconCoordindate[appIcon.toString()] = [appIconX, appIconY];
     windowClone.add_actor(appIcon);
-
+	
     return [windowClone, appIconCoordindate];
 }
 
