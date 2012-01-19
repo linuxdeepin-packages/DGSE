@@ -18,7 +18,8 @@
     font-weight: bold;
     color: rgba(255,255,255,0.8);
     font-size: 24px;
-    text-shadow: rgba(255,255,255,0.3) 0px 1px 0px;
+	text-decoration: blink;
+	text-shadow: -1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000;
 }
 
 .alt-tab-workspace-title-label {
@@ -27,8 +28,11 @@
     text-shadow: rgba(0,0,0,0.3) 0px 1px 0px;
     text-align: center;
     padding: 20px 20px 20px 20px;
+	text-decoration: blink;
+	text-shadow: -1px 0 #FFF, 0 1px #FFF, 1px 0 #FFF, 0 -1px #FFF;
 }
 
 .alt-tab-workspace-indicator {
 	background-image: url("workspace-indicator.svg");
 }
+
