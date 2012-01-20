@@ -63,8 +63,7 @@ function getDesktopClone(blurBackground) {
     let height = monitor.height;
 
     // Create actor group.
-    let desktopClone = new St.Group({clip_to_allocation: true,
-                                     style_class: 'alt-tab-switch-actor-indicator'});
+    let desktopClone = new St.Group({clip_to_allocation: true});
     desktopClone.set_size(width, height);
 
     // Add background.
@@ -225,25 +224,29 @@ SwitchActor.prototype = {
     initPosition: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
         this.clone.set_position(
-            (monitor.width - this.target_width) / 2,
+			this.indicatorBorderX,
+			this.indicatorBorderY
+        );
+        this.cloneIndicator.set_position(
+            (monitor.width - this.target_width) / 2 - this.indicatorBorderX,
             panelHeight + monitor.height / 8
         );
     },
 
     moveToCenter: function() {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        this.clone.raise_top();
-        this.clone.rotation_center_y = new Clutter.Vertex(
-            {x: this.target_width / 2,// coordinate is relative to clone self
+        this.cloneIndicator.raise_top();
+        this.cloneIndicator.rotation_center_y = new Clutter.Vertex(
+            {x: (this.target_width) / 2 - this.indicatorBorderX,// coordinate is relative to clone self
              y: 0.0,
              z: 0.0 });
         Tweener.addTween(
-            this.clone,
+            this.cloneIndicator,
             {opacity: 255,
-             x: (monitor.width - this.target_width) / 2,
-             y: monitor.height / 2 - this.target_height / 2 - this.offsetY,
-             width: this.target_width,
-             height: this.target_height,
+             x: (monitor.width - this.target_width) / 2 - this.indicatorBorderX,
+             y: monitor.height / 2 - this.target_height / 2 - this.offsetY - this.indicatorBorderY,
+             width: this.target_width + this.indicatorBorderX * 2,
+             height: this.target_height + this.indicatorBorderY * 2,
              rotation_angle_y: 0.0,
              time: 0.25,
              transition: 'easeOutQuad'
@@ -280,18 +283,18 @@ SwitchActor.prototype = {
 
     moveToLeft: function(indexOffset) {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        this.clone.raise_top();
-        this.clone.rotation_center_y = new Clutter.Vertex(
-            {x: this.target_width_side / 2, // coordinate is relative to clone self
+        this.cloneIndicator.raise_top();
+        this.cloneIndicator.rotation_center_y = new Clutter.Vertex(
+            {x: this.target_width_side / 2 - this.indicatorBorderX, // coordinate is relative to clone self
              y: 0.0,
              z: 0.0 });
         Tweener.addTween(
-            this.clone,
+            this.cloneIndicator,
             {opacity: 255,
-             x: monitor.width * 0.2 - this.offsetX * indexOffset,
-             y: monitor.height / 2 - this.target_height_side / 2,
-             width: this.target_width_side,
-             height: this.target_height_side,
+             x: monitor.width * 0.2 - this.offsetX * indexOffset - this.indicatorBorderX,
+             y: monitor.height / 2 - this.target_height_side / 2 - this.indicatorBorderY,
+             width: this.target_width_side + this.indicatorBorderX * 2,
+             height: this.target_height_side + this.indicatorBorderY * 2,
              rotation_angle_y: 60.0,
              time: 0.25,
              transition: 'easeOutQuad'
@@ -328,18 +331,18 @@ SwitchActor.prototype = {
 
     moveToRight: function(indexOffset) {
         let [panelWidth, panelHeight] = Main.panel.actor.get_size();
-        this.clone.lower_bottom();
-        this.clone.rotation_center_y = new Clutter.Vertex(
-            {x: this.target_width_side / 2,// coordinate is relative to clone self
+        this.cloneIndicator.lower_bottom();
+        this.cloneIndicator.rotation_center_y = new Clutter.Vertex(
+            {x: this.target_width_side / 2 - this.indicatorBorderX,// coordinate is relative to clone self
              y: 0.0,
              z: 0.0 });
         Tweener.addTween(
-            this.clone,
+            this.cloneIndicator,
             {opacity: 255,
-             x: monitor.width * 0.8 + this.offsetX * indexOffset - this.target_width_side,
-             y: monitor.height / 2 - this.target_height_side / 2,
-             width: this.target_width_side,
-             height: this.target_height_side,
+             x: monitor.width * 0.8 + this.offsetX * indexOffset - this.target_width_side - this.indicatorBorderX,
+             y: monitor.height / 2 - this.target_height_side / 2 - this.indicatorBorderY,
+             width: this.target_width_side + this.indicatorBorderX * 2,
+             height: this.target_height_side + this.indicatorBorderY * 2,
              rotation_angle_y: -60.0,
              time: 0.25,
              transition: 'easeOutQuad'
@@ -434,6 +437,17 @@ SwitchActor.prototype = {
                 this.scale
             );
         }
+		
+		this.indicatorBorderX = 8;
+		this.indicatorBorderY = 8;
+		this.cloneIndicator = new St.Group(
+			{clip_to_allocation: true,
+			 style_class: 'alt-tab-switch-actor-indicator',
+			 x: -this.indicatorBorderX,
+			 y: -this.indicatorBorderY,
+			 width: this.target_width + this.indicatorBorderX * 2, 
+			 height: this.target_height + this.indicatorBorderY * 2});
+		this.cloneIndicator.add_actor(this.clone);
     }
 };
 
@@ -493,13 +507,13 @@ Switcher.prototype = {
             for (let w in this.switchWindows) {
                 this.switchWindows[w].initPosition();
                 this.previews.push(this.switchWindows[w]);
-                this.previewLayer.add_actor(this.switchWindows[w].clone);
+                this.previewLayer.add_actor(this.switchWindows[w].cloneIndicator);
             }
 
             for (let s in this.switchWorkspaces) {
                 this.switchWorkspaces[s].initPosition();
                 this.previews.push(this.switchWorkspaces[s]);
-                this.previewLayer.add_actor(this.switchWorkspaces[s].clone);
+                this.previewLayer.add_actor(this.switchWorkspaces[s].cloneIndicator);
             }
 
             workspaceNum = this.workspaceIndexes.length;
@@ -876,7 +890,7 @@ Switcher.prototype = {
             let compositor = metaWin.get_compositor_private();
 
             Tweener.addTween(
-                preview.clone,
+                preview.cloneIndicator,
                 {opacity: 255,
                  x: compositor.x,
                  y: compositor.y,

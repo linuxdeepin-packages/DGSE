@@ -36,3 +36,8 @@
 	background-image: url("workspace-indicator.svg");
 }
 
+.alt-tab-switch-actor-indicator {
+	border-radius: 8px 8px 8px 8px;
+	border: 8px solid rgba(226,226,226,0.5);
+}
+
