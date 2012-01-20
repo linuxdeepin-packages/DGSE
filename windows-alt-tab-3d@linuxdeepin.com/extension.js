@@ -18,7 +18,6 @@ let monitor = null;
 let workspacePaddingX = 16;
 let workspacePaddingTop = 72;
 let workspacePaddingBottom = 64;
-let workspaceTitleY = 110;
 let workspaceWidth = null;
 let workspaceHeight = null;
 let workspaceNum = 0;
@@ -566,7 +565,7 @@ Switcher.prototype = {
                 workspaceTitleLabel.set_size(workspaceWidth, -1);
                 let workspaceTitleBin = new St.Bin({ x_align: St.Align.START });
                 workspaceTitleBin.add_actor(workspaceTitleLabel);
-                workspaceTitleBin.set_position(0, workspaceTitleY);
+                workspaceTitleBin.set_position(0, workspaceHeight);
 
                 let workspaceBoxLayout = new St.BoxLayout(
                     {reactive: true,
