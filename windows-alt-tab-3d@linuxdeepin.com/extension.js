@@ -707,8 +707,11 @@ Switcher.prototype = {
         // Sort workspace index.
         this.workspaceIndexes.sort();
 
-        // Add last workspace index.
-        this.workspaceIndexes.push(this.workspaceIndexes.length);
+        // Add new workspace index.
+		if (activeWorkspace.index() != this.workspaceIndexes.length - 1 || 
+			activeWorkspace.list_windows().length >= 2) {
+			this.workspaceIndexes.push(this.workspaceIndexes.length);
+		}
 		
         return [windowActors, workspaceActors];
     },
