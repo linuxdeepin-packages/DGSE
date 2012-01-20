@@ -540,9 +540,9 @@ Switcher.prototype = {
                 let workspaceTitle;
                 let workspaceIndex = wi + 1;
                 if (wi == this.workspaceIndexes.length - 1) {
-                    workspaceTitle = "New Workspace";
+                    workspaceTitle = _("New Workspace");
                 } else {
-                    workspaceTitle = "Workspace " + workspaceIndex;
+                    workspaceTitle = _("Workspace ") + workspaceIndex;
                 }
                 let workspaceTitleLabel = new St.Label(
                     {style_class: 'alt-tab-workspace-title-label',
@@ -554,10 +554,10 @@ Switcher.prototype = {
 
                 let workspaceBoxLayout = new St.BoxLayout(
                     {vertical: true});
-                // workspaceBoxLayout.add(workspaceTitleBin, {x_fill: true,
-                //                                         y_fill: false,
-                //                                         expand: false,
-                //                                         y_align: St.Align.START});
+                workspaceBoxLayout.add(workspaceTitleBin, {x_fill: true,
+                                                        y_fill: false,
+                                                        expand: false,
+                                                        y_align: St.Align.START});
                 workspaceBoxLayout.add(workspaceCloneBin, {x_fill: false,
                                                            y_fill: false,
                                                            expand: false,
@@ -617,12 +617,6 @@ Switcher.prototype = {
         Main.uiGroup.add_actor(this.actor);
     },
 
-    isWindowOnWorkspace: function(w, workspace) {
-        if (w.get_workspace() == workspace)
-            return true;
-        return false;
-    },
-
     sortAppIcon : function(appIcon1, appIcon2) {
         let t1 = appIcon1.window.get_user_time();
         let t2 = appIcon2.window.get_user_time();
@@ -635,24 +629,28 @@ Switcher.prototype = {
         let windowActors = [];
         let otherWorkspaces = {};
         let apps = Shell.AppSystem.get_default().get_running ();
+		let keys = [];
 
         for (let i in apps) {
             let windows = apps[i].get_windows();
             for(let j in windows) {
                 let switchActor = new SwitchActor(apps[i], windows[j]);
+                let workspaceIndex = windows[j].get_workspace().index();
 
-                if (this.isWindowOnWorkspace(windows[j], activeWorkspace)) {
+                if (workspaceIndex == activeWorkspace.index()) {
                     // Add application in current workspace to list.
                     windowActors.push(switchActor);
                 } else {
                     // Add other worspace.
-                    let workspaceIndex = windows[j].get_workspace().index();
                     if (otherWorkspaces[workspaceIndex]) {
                         if (switchActor.window.get_user_time() > otherWorkspaces[workspaceIndex].window.get_user_time()) {
                             // Update topest application in workspace dict.
                             otherWorkspaces[workspaceIndex] = switchActor;
                         }
                     } else {
+						// Push workspace index.
+						keys.push(workspaceIndex);
+						
                         // Fill workspace this is first application.
                         otherWorkspaces[workspaceIndex] = switchActor;
                     }
@@ -661,16 +659,10 @@ Switcher.prototype = {
         }
 
         windowActors.sort(Lang.bind(this, this.sortAppIcon));
-
-        let workspaceActors = [];
-
-        // Sort workspace by index.
-        let keys = [];
-        for (k in otherWorkspaces) {
-            keys.push(k);
-        }
         keys.sort();
 
+        let workspaceActors = [];
+		
         this.workspaceIndexes = [];
 
         for (let jj in keys) {
@@ -688,8 +680,8 @@ Switcher.prototype = {
         this.workspaceIndexes.sort();
 
         // Add last workspace index.
-        this.workspaceIndexes.push(this.workspaceIndexes[this.workspaceIndexes.length - 1] + 1);
-
+        this.workspaceIndexes.push(this.workspaceIndexes.length);
+		
         return [windowActors, workspaceActors];
     },
 
@@ -837,10 +829,7 @@ Switcher.prototype = {
         } else {
             let numKey = keysym - Clutter.KEY_0;
             if (numKey > 0 && numKey < 10) {
-                if (this.workspaceIndexes[numKey - 1]) {
-                    global.screen.get_workspace_by_index(numKey - 1).activate(global.get_current_time());
-                    this.destroy();
-                }
+				this.selectWorkspace(numKey - 1);
             }
         }
 
@@ -857,6 +846,13 @@ Switcher.prototype = {
 
         return true;
     },
+	
+	selectWorkspace: function(index) {
+        if (this.workspaceIndexes[index] != undefined) {
+            global.screen.get_workspace_by_index(index).activate(global.get_current_time());
+            this.destroy();
+        }
+	},
 
     activateSelected: function() {
         Main.activateWindow(this.getCurrentWindow());

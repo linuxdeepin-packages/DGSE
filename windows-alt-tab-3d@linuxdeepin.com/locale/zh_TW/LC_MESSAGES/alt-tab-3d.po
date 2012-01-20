@@ -7,3 +7,6 @@ msgstr ""
 
 msgid "Workspace "
 msgstr "工作區 "
+
+msgid "New Workspace"
+msgstr "新增工作區"
