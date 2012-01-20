@@ -524,8 +524,6 @@ Switcher.prototype = {
 				this.previews[previewIndex].cloneIndicator.connect(
 					'clicked', 
 					Lang.bind(this, function() {
-								  global.log(previewIndex);
-								  
 								  this.currentIndex = previewIndex;
 								  this.updateCoverflow();
 								  this.activateSelected();
@@ -581,10 +579,21 @@ Switcher.prototype = {
                                                            y_fill: false,
                                                            expand: false,
                                                            y_align: St.Align.START});
-                workspaceBoxLayout.set_opacity(0);
+				
+				let workspaceButton = new St.Button(
+					{reactive: true}
+				);
+				workspaceButton.add_actor(workspaceBoxLayout);
+				workspaceButton.set_opacity(0);
+				workspaceButton.connect(
+					'clicked',
+					Lang.bind(this, function() {
+								  this.selectWorkspace(workspaceIndex - 1);
+							  })
+				);
 
-                this.workspaceLayer.add(workspaceBoxLayout);
-                this.workspaces.push(workspaceBoxLayout);
+                this.workspaceLayer.add(workspaceButton);
+                this.workspaces.push(workspaceButton);
             }
 
             this.workspaceLayer.set_position(
