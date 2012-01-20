@@ -18,6 +18,7 @@ let monitor = null;
 let workspacePaddingX = 16;
 let workspacePaddingTop = 72;
 let workspacePaddingBottom = 64;
+let workspaceTitleY = 110;
 let workspaceWidth = null;
 let workspaceHeight = null;
 let workspaceNum = 0;
@@ -528,7 +529,8 @@ Switcher.prototype = {
             this.workspaces = [];
 
             for (let wi = 0; wi < this.workspaceIndexes.length; wi++) {
-                let [workspaceClone, workspaceCoordinates] = getWorkspaceClone(this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
+                let [workspaceClone, workspaceCoordinates] = getWorkspaceClone(
+					this.workspaceIndexes[wi], workspaceWidth, workspaceHeight, scale);
                 workspaceClone.set_clip(0, 0, workspaceWidth, workspaceHeight);
                 let workspaceCloneBin = new St.Bin({x_fill: true, y_fill: true});
                 workspaceCloneBin.set_size(
@@ -540,7 +542,7 @@ Switcher.prototype = {
                 let workspaceTitle;
                 let workspaceIndex = wi + 1;
                 if (wi == this.workspaceIndexes.length - 1) {
-                    workspaceTitle = _("New Workspace");
+                    workspaceTitle = _("New Workspace") + " (" + workspaceIndex + ")";
                 } else {
                     workspaceTitle = _("Workspace ") + workspaceIndex;
                 }
@@ -551,14 +553,16 @@ Switcher.prototype = {
                 workspaceTitleLabel.set_size(workspaceWidth, -1);
                 let workspaceTitleBin = new St.Bin({ x_align: St.Align.START });
                 workspaceTitleBin.add_actor(workspaceTitleLabel);
+                workspaceTitleBin.set_position(0, workspaceTitleY);
 
                 let workspaceBoxLayout = new St.BoxLayout(
-                    {vertical: true});
-                workspaceBoxLayout.add(workspaceTitleBin, {x_fill: true,
-                                                        y_fill: false,
-                                                        expand: false,
-                                                        y_align: St.Align.START});
+                    {reactive: true,
+					 vertical: true});
                 workspaceBoxLayout.add(workspaceCloneBin, {x_fill: false,
+                                                           y_fill: false,
+                                                           expand: false,
+                                                           y_align: St.Align.START});
+                workspaceBoxLayout.add(workspaceTitleBin, {x_fill: true,
                                                            y_fill: false,
                                                            expand: false,
                                                            y_align: St.Align.START});
