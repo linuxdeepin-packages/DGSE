@@ -441,8 +441,9 @@ SwitchActor.prototype = {
 		
 		this.indicatorBorderX = 8;
 		this.indicatorBorderY = 8;
-		this.cloneIndicator = new St.Group(
+		this.cloneIndicator = new St.Button(
 			{clip_to_allocation: true,
+			 reactive: true,
 			 style_class: 'alt-tab-switch-actor-indicator',
 			 x: -this.indicatorBorderX,
 			 y: -this.indicatorBorderY,
@@ -515,7 +516,21 @@ Switcher.prototype = {
                 this.switchWorkspaces[s].initPosition();
                 this.previews.push(this.switchWorkspaces[s]);
                 this.previewLayer.add_actor(this.switchWorkspaces[s].cloneIndicator);
+				
             }
+			
+			for (let p in this.previews) {
+				let previewIndex = p;
+				this.previews[previewIndex].cloneIndicator.connect(
+					'clicked', 
+					Lang.bind(this, function() {
+								  global.log(previewIndex);
+								  
+								  this.currentIndex = previewIndex;
+								  this.updateCoverflow();
+								  this.activateSelected();
+							  }));
+			}
 
             workspaceNum = this.workspaceIndexes.length;
             let workspaceMaxWidth = monitor.width / 6 - workspacePaddingX * 2;
