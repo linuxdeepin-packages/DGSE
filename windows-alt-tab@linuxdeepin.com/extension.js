@@ -23,6 +23,23 @@ const SELECT_PREV = 2;
 const Gettext = imports.gettext;
 let _;
 
+function getInvisibleBorderPadding(metaWindow) {
+    // We need to adjust the position of the actor because of the
+    // consequences of invisible borders -- in reality, the texture
+    // has an extra set of "padding" around it that we need to trim
+    // down.
+
+    // The outer rect paradoxically is the smaller rectangle,
+    // containing the positions of the visible frame. The input
+    // rect contains everything, including the invisible border
+    // padding.
+    let outerRect = metaWindow.get_outer_rect();
+    let inputRect = metaWindow.get_input_rect();
+
+    return [inputRect.x - outerRect.x,
+            inputRect.y - outerRect.y];
+}
+
 function primaryModifier(mask) {
     if (mask == 0)
         return 0;
@@ -155,10 +172,10 @@ SwitchThumbnailIcon.prototype = {
 
         // Add workspace windows.
         for (let ii = 0; ii < workspaceWindows.length; ii++) {
-            let windowTexture = workspaceWindows[ii].get_compositor_private().get_texture();
+            let texture = workspaceWindows[ii].get_compositor_private().get_texture();
             let rect = workspaceWindows[ii].get_outer_rect();
             let windowClone = new Clutter.Clone(
-                {source: windowTexture,
+                {source: texture,
                  reactive: true,
                  x: rect.x * scaleX,
                  y: rect.y * scaleY,
@@ -190,19 +207,23 @@ SwitchThumbnailIcon.prototype = {
             clone = this.get_workspace_clone(this.window.get_workspace().index());
         } else {
             // Otherwise show application thumbnail.
-            let mutterWindow = this.window.get_compositor_private();
-            let windowTexture = mutterWindow.get_texture ();
-            let [width, height] = windowTexture.get_size();
+            let realWindow = this.window.get_compositor_private();
+			let metaWindow = realWindow.meta_window;
+            let texture = realWindow.get_texture ();
+			let [borderX, borderY] = getInvisibleBorderPadding(metaWindow);
+			let outerRect = metaWindow.get_outer_rect();
+			let width = outerRect.width;
+			let height = outerRect.height;
             let scale = Math.min(1.0, iconWidth / width, iconHeight / height);
 
             clone = new Clutter.Group({clip_to_allocation: true});
             clone.set_size(this.iconWidth, this.iconHeight);
 
             let windowClone = new Clutter.Clone (
-                { source: windowTexture,
+                { source: texture,
                   reactive: true,
-				  x: (this.iconWidth - (width * scale)) / 2,
-                  y: (this.iconHeight - (height * scale)) / 2,
+				  x: (this.iconWidth - (width * scale)) / 2 + borderX * scale,
+                  y: (this.iconHeight - (height * scale)) / 2 + borderY * scale,
                   width: width * scale,
                   height: height * scale
                 });
@@ -376,7 +397,7 @@ SwitchPopupWindow.prototype = {
         for (let jj = 0; jj < keys.length; jj++) {
             workspaces.push(otherWorkspaces[keys[jj]]);
         }
-
+		
         return [workspaceIcons, workspaces];
     },
 
