@@ -636,9 +636,9 @@ function doAltTab(shellwm, binding, mask, window, backwards) {
 
 function enable() {
     Main.wm.setKeybindingHandler('switch_windows', doAltTab);
-    Main.wm.setKeybindingHandler('switch_group', doAltTab);
+    // Main.wm.setKeybindingHandler('switch_group', doAltTab);
     Main.wm.setKeybindingHandler('switch_windows_backward', doAltTab);
-    Main.wm.setKeybindingHandler('switch_group_backward', doAltTab);
+    // Main.wm.setKeybindingHandler('switch_group_backward', doAltTab);
 }
 
 function disable() {

@@ -990,9 +990,9 @@ function startWindowSwitcher(shellwm, binding, mask, window, backwards) {
 }
 
 function enable() {
-    Main.wm.setKeybindingHandler('switch_windows', startWindowSwitcher);
+    // Main.wm.setKeybindingHandler('switch_windows', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_group', startWindowSwitcher);
-    Main.wm.setKeybindingHandler('switch_windows_backward', startWindowSwitcher);
+    // Main.wm.setKeybindingHandler('switch_windows_backward', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_panels', startWindowSwitcher);
     Main.wm.setKeybindingHandler('switch_group_backward', startWindowSwitcher);
 }
