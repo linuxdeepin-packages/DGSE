@@ -230,7 +230,7 @@ SwitchThumbnailIcon.prototype = {
             clone.add_actor(windowClone);
 
             let appIconSize = 32;
-            let appIconBoxSize = 42;
+            let appIconBoxSize = 38;
             let appIcon = this.app.create_icon_texture(appIconSize);
             let appIconBox = new St.Bin( { style_class: 'thumbnail-app-icon-box'});
             appIconBox.set_position(this.iconWidth - appIconBoxSize, this.iconHeight - appIconBoxSize);
