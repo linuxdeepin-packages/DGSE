@@ -39,14 +39,14 @@
 
 .thumbnail-icon-font {
 	color: rgba(0,0,0,0.8);
-	font-weight: normal;
+    font-weight: bold;
 	font-size: 15px;
-	text-shadow: rgba(255,255,255,0.3) 0px 1px 0px;
+    padding: 5px 5px 5px 5px;
 }
 
 .thumbnail-app-icon-box {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background: rgba(200,200,200,0.8);
     border: 1px solid rgba(0,0,0,0.40);
     border-radius: 10px;
