@@ -253,6 +253,30 @@ Suggests: deepin-gse-classic-systray,
 Description: GNOME shell extension -- Windows alt-tab
  This is a GNOME shell extension, window alt tab.
 
+Package: deepin-gse-windows-alt-grave-3d
+Architecture: all
+Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
+Recommends: gnome-tweak-tool (>=3.2.0-1~)
+Suggests: deepin-gse-classic-systray,
+    deepin-gse-drive-menu,
+    deepin-gse-hide-dash,
+    deepin-gse-hide-username,
+    deepin-gse-no-a11y,
+    deepin-gse-no-click-tab,
+    deepin-gse-shutdown-menu,
+    deepin-gse-system-monitor,
+    deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-navigator,
+    deepin-gse-workspace-navigator,
+    deepin-gse-xrandr,
+    deepin-gse-dock,
+    deepin-gse-user-theme,
+    deepin-gse-show-desktop
+Description: GNOME shell extension -- Windows alt-tab 3D
+ This is a GNOME shell extension, window alt grave.
+ Press Alt-Tilde(`, above of table key), 
+ you will see 3D window switch effects.
+
 Package: deepin-gse-windows-navigator
 Architecture: all
 Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
