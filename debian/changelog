@@ -1,4 +1,4 @@
-deepin-gse (1.0.15-0deepin) oneiric; urgency=low
+deepin-gse (1.0.15-0deepin1) oneiric; urgency=low
 
   [manateelazycat]
     * Don't show tooltip when cursor hover dock.
