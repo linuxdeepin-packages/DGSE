@@ -1,3 +1,13 @@
+deepin-gse (1.0.15-0deepin) oneiric; urgency=low
+
+  [manateelazycat]
+    * Don't show tooltip when cursor hover dock.
+  [YunQiang Su]
+    * Remove postinst scripts to run glib-compile-schemas:
+      glib-2.0 has an trigger to process it.
+
+ -- YunQiang Su <wzsyqa@gmail.com>  Mon, 27 Feb 2012 12:44:22 +0800
+
 deepin-gse (1.0.14-1) oneiric; urgency=low
 
   * Upstream update
