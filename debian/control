@@ -9,21 +9,25 @@ Package: deepin-gse-all
 Architecture: all
 Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~),
     deepin-gse-classic-systray,
+    deepin-gse-dock,
     deepin-gse-drive-menu,
     deepin-gse-enhanced-search,
+    deepin-gse-gcalc-search,
     deepin-gse-hide-dash,
     deepin-gse-hide-username,
+    deepin-gse-multi-volume,
     deepin-gse-no-a11y,
     deepin-gse-no-click-tab,
+    deepin-gse-record-desktop,
     deepin-gse-shutdown-menu,
     deepin-gse-system-monitor,
+    deepin-gse-user-theme,
     deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-alt-grave-3d,
     deepin-gse-windows-alt-tab,
     deepin-gse-windows-navigator,
     deepin-gse-workspace-navigator,
-    deepin-gse-xrandr,
-    deepin-gse-dock,
-    deepin-gse-user-theme,
+    deepin-gse-xrandr
 Recommends: gnome-tweak-tool (>=3.2.0-1~)
 Description: Deepin default GNOME shell extensions.
  This is a meta package that will install all Deepin default GNOME shell 
