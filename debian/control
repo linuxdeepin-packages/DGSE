@@ -10,6 +10,7 @@ Architecture: all
 Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~),
     deepin-gse-classic-systray,
     deepin-gse-drive-menu,
+    deepin-gse-enhanced-search,
     deepin-gse-hide-dash,
     deepin-gse-hide-username,
     deepin-gse-no-a11y,
@@ -73,6 +74,57 @@ Description: GNOME shell extension -- Removable drive menu
  This is a GNOME shell extension, it provides a status menu for accessing
  and unmounting removable devices.
 
+Package: deepin-gse-enhanced-search
+Architecture: all
+Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
+Recommends: gnome-tweak-tool (>=3.2.0-1~)
+Suggests: deepin-gse-classic-systray,
+    deepin-gse-drive-menu,
+    deepin-gse-hide-dash,
+    deepin-gse-hide-username,
+    deepin-gse-no-a11y,
+    deepin-gse-no-click-tab,
+    deepin-gse-shutdown-menu,
+    deepin-gse-system-monitor,
+    deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-alt-tab,
+    deepin-gse-windows-navigator,
+    deepin-gse-workspace-navigator,
+    deepin-gse-dock,
+    deepin-gse-xrandr,
+    deepin-gse-user-theme,
+    deepin-gse-record-desktop
+Conflicts: gnome-shell-extensions
+Replaces: gnome-shell-extensions
+Description: GNOME shell extension -- Enhanced Search
+ This is a GNOME shell extension, provides enchanced search utils
+ in overview mode.
+
+Package: deepin-gse-gcalc-search
+Architecture: all
+Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
+Recommends: gnome-tweak-tool (>=3.2.0-1~)
+Suggests: deepin-gse-classic-systray,
+    deepin-gse-drive-menu,
+    deepin-gse-hide-dash,
+    deepin-gse-hide-username,
+    deepin-gse-no-a11y,
+    deepin-gse-no-click-tab,
+    deepin-gse-shutdown-menu,
+    deepin-gse-system-monitor,
+    deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-alt-tab,
+    deepin-gse-windows-navigator,
+    deepin-gse-workspace-navigator,
+    deepin-gse-dock,
+    deepin-gse-xrandr,
+    deepin-gse-user-theme,
+    deepin-gse-record-desktop
+Conflicts: gnome-shell-extensions
+Replaces: gnome-shell-extensions
+Description: GNOME shell extension -- Enhanced Search
+ This is a GNOME shell extension. You can calculate in search entry.
+
 Package: deepin-gse-hide-dash
 Architecture: all
 Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
@@ -116,6 +168,27 @@ Suggests: deepin-gse-classic-systray,
 Description: GNOME shell extension -- Hide username
  This is a GNOME shell extension, it hides the username in status area.
 
+Package: deepin-gse-multi-volume
+Architecture: all
+Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
+Recommends: gnome-tweak-tool (>=3.2.0-1~)
+Suggests: deepin-gse-classic-systray,
+    deepin-gse-drive-menu,
+    deepin-gse-hide-dash,
+    deepin-gse-no-a11y,
+    deepin-gse-no-click-tab,
+    deepin-gse-shutdown-menu,
+    deepin-gse-system-monitor,
+    deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-alt-tab,
+    deepin-gse-windows-navigator,
+    deepin-gse-workspace-navigator,
+    deepin-gse-xrandr,
+    deepin-gse-dock,
+    deepin-gse-user-theme,
+Description: GNOME shell extension -- Hide username
+ This is a GNOME shell extension, select the default sound output.
+
 Package: deepin-gse-no-a11y
 Architecture: all
 Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
@@ -158,6 +231,32 @@ Suggests: deepin-gse-classic-systray,
 Description: GNOME shell extension -- No Click Tab
  This is a GNOME shell extension, no need to click to switch tab in overview
  screen.
+
+Package: deepin-gse-record-desktop
+Architecture: all
+Depends: ${misc:Depends}, gnome-shell (>=3.2.0-1~)
+Recommends: gnome-tweak-tool (>=3.2.0-1~)
+Suggests: deepin-gse-classic-systray,
+    deepin-gse-drive-menu,
+    deepin-gse-hide-dash,
+    deepin-gse-hide-username,
+    deepin-gse-no-a11y,
+    deepin-gse-no-click-tab,
+    deepin-gse-shutdown-menu,
+    deepin-gse-system-monitor,
+    deepin-gse-windowoverlay-icons,
+    deepin-gse-windows-alt-tab,
+    deepin-gse-windows-navigator,
+    deepin-gse-workspace-navigator,
+    deepin-gse-dock,
+    deepin-gse-xrandr,
+    deepin-gse-user-theme,
+    deepin-gse-enhanced-search
+Conflicts: gnome-shell-extensions
+Replaces: gnome-shell-extensions
+Description: GNOME shell extension -- Record Desktop Icon
+ This is a GNOME shell extension, shows an icon in systray to 
+ start/stop recording desktop
 
 Package: deepin-gse-shutdown-menu
 Architecture: all
@@ -372,3 +471,7 @@ Conflicts: gnome-shell-extensions
 Replaces: gnome-shell-extensions
 Description: GNOME shell extension -- User Themes
  This is a GNOME shell extension, enable user themes.
+
+
+
+

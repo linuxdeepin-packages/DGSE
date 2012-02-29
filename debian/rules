@@ -8,4 +8,4 @@ override_dh_installdirs:
 	    lang=`basename $$dir`; \
 	    mkdir -p debian/deepin-gse-system-monitor/usr/share/locale/$$lang/LC_MESSAGES/; \
 	    msgfmt $$dir/system-monitor-applet.po -o debian/deepin-gse-system-monitor/usr/share/locale/$$lang/LC_MESSAGES/system-monitor-applet.mo ; \
-	    done
+	done

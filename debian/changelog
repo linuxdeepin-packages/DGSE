@@ -1,7 +1,8 @@
-deepin-gse (1.0.16-0deepin) oneiric; urgency=low
+deepin-gse (1.0.16-0deepin1) oneiric; urgency=low
 
   [ manateelazycat ]
    * add windows-alt-grave-3d
+   * add multi-volume.
    * Don't show tooltip when cursor hover dock.
   [YunQiang Su]
    * rm postinst to run glib-compile-schemas:
