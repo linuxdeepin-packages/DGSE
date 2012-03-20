@@ -1,6 +1,13 @@
 deepin-gse (1.0.16-0deepin2) oneiric; urgency=low
 
   [ manateelazycat ]
+   * work with gnome-shell 3.2.2.
+
+ -- YunQiang Su <wzssyqa@gmail.com>  Tue, 20 Mar 2012 18:30:22 +0800
+
+deepin-gse (1.0.16-0deepin2) oneiric; urgency=low
+
+  [ manateelazycat ]
    * add windows-alt-grave-3d
    * add multi-volume.
    * Don't show tooltip when cursor hover dock.
