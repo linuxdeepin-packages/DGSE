@@ -3,8 +3,7 @@
   "description": "Search provider using gcalctool to perform calculations. Requires that gcalctool (The standard gnome calculator) is installed. Based on the Calculator tool by eon. Supports everything that gcalctool supports. Including trig functions, exponents, logarithms, etc. Now supports number entry / display in different bases. See README for details.  https://github.com/war1025/GCalcSearch", 
   "name": "Advanced Calculator", 
   "shell-version": [
-    "3.2", 
-    "3.2.1"
+    "3.2"
   ], 
   "url": "", 
   "uuid": "gcalc-search@linuxdeepin.com", 

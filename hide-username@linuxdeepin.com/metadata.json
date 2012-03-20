@@ -1,5 +1,5 @@
 {
-    "shell-version": ["3.2.1"], 
+    "shell-version": ["3.2"], 
     "uuid": "hide-username@linuxdeepin.com", 
     "name": "Hide Username", 
     "description": "Hide user name in user menu",
